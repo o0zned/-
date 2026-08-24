@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>QR 스캔</title>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+    --green: #BFF366;
+    --green-dark: #8BCC2A;
+    --green-deep: #3D6B00;
+    --cream: #FAFFF0;
+    --brown: #4A3728;
+    --brown-light: #8B6F5E;
+    --radius-xl: 24px;
+    --radius-lg: 18px;
+    --radius-md: 14px;
+    --shadow-sm: 0 2px 12px rgba(61,107,0,0.12);
+    --shadow-lg: 0 24px 60px rgba(0,0,0,0.2);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; overflow:hidden; background:#000; font-family:'Noto Sans KR',sans-serif; }
+
+.scan-wrap { position:relative; width:100%; height:100dvh; }
+#camera-video { width:100%; height:100%; object-fit:cover; }
+#scan-canvas { display:none; }
+
+.scan-frame {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:min(70vw, 280px); height:min(70vw, 280px);
+    border:3px solid var(--green); border-radius:var(--radius-lg);
+    box-shadow:0 0 0 2000px rgba(0,0,0,0.45);
+}
+.scan-frame::before, .scan-frame::after {
+    content:''; position:absolute; width:100%; height:2px; left:0;
+    background:var(--green); box-shadow:0 0 8px var(--green);
+    animation:scanLine 2s ease-in-out infinite;
+}
+@keyframes scanLine { 0%,100%{top:0;} 50%{top:100%;} }
+
+.top-bar {
+    position:absolute; top:0; left:0; right:0;
+    padding:max(16px, env(safe-area-inset-top)) 16px 16px;
+    display:flex; align-items:center; justify-content:space-between;
+    background:linear-gradient(180deg, rgba(0,0,0,0.55) 0%, transparent 100%);
+}
+.top-bar h1 { font-family:'Gaegu',cursive; font-size:20px; color:white; }
+.close-btn { width:36px; height:36px; border-radius:50%; border:none; background:rgba(255,255,255,0.9); font-size:16px; cursor:pointer; }
+
+.status-bar {
+    position:absolute; bottom:max(24px, env(safe-area-inset-bottom)); left:16px; right:16px;
+    background:rgba(255,255,255,0.95); border-radius:var(--radius-md); padding:12px 16px;
+    text-align:center; font-size:13px; font-weight:700; color:var(--green-deep);
+    box-shadow:var(--shadow-sm);
+}
+
+.overlay { position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; padding:24px; opacity:0; pointer-events:none; transition:opacity 0.3s; }
+.overlay.show { opacity:1; pointer-events:all; }
+.overlay-card { background:white; border-radius:var(--radius-xl); padding:28px 24px; width:100%; max-width:300px; text-align:center; box-shadow:var(--shadow-lg); }
+.overlay-emoji { font-size:40px; margin-bottom:10px; }
+.overlay-title { font-family:'Gaegu',cursive; font-size:22px; font-weight:700; color:var(--green-deep); margin-bottom:8px; }
+.overlay-sub { font-size:13px; color:var(--brown-light); line-height:1.6; margin-bottom:20px; }
+.overlay-btn { width:100%; padding:13px; border:none; border-radius:var(--radius-md); background:var(--green-deep); color:var(--green); font-size:15px; font-weight:700; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div class="scan-wrap">
+  <video id="camera-video" autoplay playsinline muted></video>
+  <canvas id="scan-canvas"></canvas>
+  <div class="scan-frame"></div>
+  <div class="top-bar">
+    <h1>📷 QR 스캔</h1>
+    <button class="close-btn" id="close-btn" onclick="history.back()">✕</button>
+  </div>
+  <div class="status-bar" id="status-bar">카메라 권한을 요청하고 있어요...</div>
+</div>
+
+<div class="overlay" id="error-overlay">
+  <div class="overlay-card">
+    <div class="overlay-emoji">🚫</div>
+    <div class="overlay-title" id="error-title">인식할 수 없는 QR</div>
+    <p class="overlay-sub" id="error-sub"></p>
+    <button class="overlay-btn" id="error-retry-btn">다시 스캔하기</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
+<script>
+/**
+ * -----------------------------------------------------------------------
+ * SECURITY: only these destinations are ever navigated to. A decoded QR
+ * value that isn't in this list (or a full URL whose path isn't in this
+ * list) is rejected with an error — never navigated to blindly.
+ *
+ * Accepts either:
+ *   - a bare route, e.g. "/car"        (recommended for the physical QR codes)
+ *   - a full URL whose PATH matches an allowed route, e.g. "https://yoursite.vercel.app/car"
+ *     (the origin is ignored on purpose — only the path is checked — so
+ *     this keeps working across preview deployments/custom domains)
+ * -----------------------------------------------------------------------
+ */
+const ALLOWED_ROUTES = [
+  '/car',           // → car/index.html (풋 레이서)
+  '/car/',
+  '/yabawi',        // → yabawi.html
+  '/yabawi.html',
+  '/dodge-books',   // → dodge-books.html (책피하기)
+  '/dodge-books.html'
+];
+
+const ROUTE_LABELS = {
+  '/car': '풋 레이서', '/car/': '풋 레이서',
+  '/yabawi': '야바위', '/yabawi.html': '야바위',
+  '/dodge-books': '책피하기', '/dodge-books.html': '책피하기'
+};
+
+const video = document.getElementById('camera-video');
+const canvas = document.getElementById('scan-canvas');
+const ctx = canvas.getContext('2d');
+const statusBar = document.getElementById('status-bar');
+const errorOverlay = document.getElementById('error-overlay');
+const errorSub = document.getElementById('error-sub');
+
+let scanning = false;
+let rafId = null;
+
+function resolveDestination(decodedText) {
+  const raw = (decodedText || '').trim();
+  if (!raw) return null;
+
+  // Case 1: bare route already in the whitelist.
+  if (ALLOWED_ROUTES.includes(raw)) return raw;
+
+  // Case 2: full URL — check only its path against the whitelist.
+  try {
+    const url = new URL(raw);
+    if (ALLOWED_ROUTES.includes(url.pathname)) return url.pathname;
+  } catch (e) {
+    // Not a valid absolute URL — fall through to rejection.
+  }
+  return null;
+}
+
+function showError(decodedText) {
+  scanning = false;
+  errorSub.textContent = '이 QR은 등록된 게임 페이지로 연결되어 있지 않아요.';
+  errorOverlay.classList.add('show');
+}
+
+function navigateTo(route) {
+  scanning = false;
+  statusBar.textContent = (ROUTE_LABELS[route] || '게임') + ' 페이지로 이동할게요...';
+  setTimeout(() => { window.location.href = route; }, 400);
+}
+
+function tick() {
+  if (!scanning) return;
+  if (video.readyState === video.HAVE_ENOUGH_DATA) {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+    if (code && code.data) {
+      const dest = resolveDestination(code.data);
+      if (dest) { navigateTo(dest); return; }
+      else { showError(code.data); return; }
+    }
+  }
+  rafId = requestAnimationFrame(tick);
+}
+
+async function startCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' }
+    });
+    video.srcObject = stream;
+    await video.play();
+    statusBar.textContent = 'QR 코드를 네모 안에 비춰주세요';
+    scanning = true;
+    tick();
+  } catch (err) {
+    statusBar.textContent = '카메라 권한이 필요해요. 브라우저 설정에서 카메라 접근을 허용해주세요.';
+  }
+}
+
+document.getElementById('error-retry-btn').addEventListener('click', () => {
+  errorOverlay.classList.remove('show');
+  scanning = true;
+  tick();
+});
+
+startCamera();
+</script>
+</body>
+</html>

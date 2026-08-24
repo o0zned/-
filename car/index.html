@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>풋 × 쏘놀 레이싱</title>
+<link rel="stylesheet" href="css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Full-bleed game viewport: this is the whole screen in landscape. -->
+  <div class="canvas-wrap">
+    <canvas id="game-canvas"></canvas>
+
+    <!-- HUD overlays directly on the canvas, like the reference screenshot,
+         instead of pushing it down inside a separate header block. -->
+    <div class="hud-top">
+      <div class="hud-left">
+        <div class="logo-badge">🌿</div>
+        <div class="hud-stats">
+          <span id="hud-coins-wrap">🪙 <span id="hud-coins">0</span></span>
+          <span>📏 <span id="hud-distance">0m</span></span>
+        </div>
+      </div>
+      <div class="hud-right">
+        <button id="debug-btn" class="hud-icon-btn" title="디버그">🐞</button>
+        <button id="regen-btn" class="hud-icon-btn" title="새 지형">🎲</button>
+      </div>
+    </div>
+
+    <div class="dev-panel">
+      <span id="seed-label">Seed: 1</span>
+      <input id="seed-input" type="number" value="1" inputmode="numeric">
+      <button id="use-seed-btn" class="dev-btn">적용</button>
+    </div>
+
+    <div class="control-hint control-hint-left">◀ 브레이크/후진</div>
+    <div class="control-hint control-hint-right">가속 ▶</div>
+  </div>
+
+  <!-- Shown only while the phone is in portrait orientation. -->
+  <div class="rotate-prompt">
+    <div class="rotate-icon">🔄</div>
+    <p>화면을 가로로 돌려주세요</p>
+  </div>
+
+  <!-- Game-over overlay: shown on flip / fall / finish. -->
+  <div class="gameover-overlay" id="gameover-overlay">
+    <div class="gameover-card">
+      <div class="gameover-emoji" id="gameover-emoji">🏁</div>
+      <div class="gameover-title" id="gameover-title">완주!</div>
+      <p class="gameover-sub" id="gameover-sub"></p>
+      <div class="stats-box">
+        <div class="stat-row"><span>점수</span><span id="stat-score">0</span></div>
+        <div class="stat-row"><span>코인</span><span id="stat-coins">0 / 0</span></div>
+        <div class="stat-row"><span>거리</span><span id="stat-distance">0m</span></div>
+        <div class="stat-row stat-row-best"><span>🏆 최고 점수</span><span id="stat-best-score">0</span></div>
+        <div class="stat-row stat-row-best"><span>🏆 최고 거리</span><span id="stat-best-distance">0m</span></div>
+      </div>
+      <button class="restart-btn" id="restart-btn">다시 하기 🔄</button>
+      <a class="home-link" href="/">🏠 메인으로</a>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <script src="/progress.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/save.js"></script>
+  <script src="js/terrain.js"></script>
+  <script src="js/physics.js"></script>
+  <script src="js/car.js"></script>
+  <script src="js/camera.js"></script>
+  <script src="js/coins.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/debug.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>

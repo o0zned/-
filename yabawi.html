@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>야바위</title>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+    --green: #BFF366;
+    --green-dark: #8BCC2A;
+    --green-deep: #3D6B00;
+    --green-mid: #A8E84A;
+    --cream: #FAFFF0;
+    --brown: #4A3728;
+    --brown-light: #8B6F5E;
+    --radius-xl: 24px;
+    --radius-lg: 18px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+    --shadow-sm: 0 2px 12px rgba(61,107,0,0.12);
+    --shadow-md: 0 4px 20px rgba(61,107,0,0.18);
+    --shadow-lg: 0 24px 60px rgba(0,0,0,0.2);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent;
+    -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+html, body { height:100%; overflow:hidden; overscroll-behavior:none; font-family:'Noto Sans KR',sans-serif; position:relative; }
+body {
+    /* ONE continuous gradient for the whole page — header and background
+       are no longer separate painted blocks, so there's no seam to line
+       up in the first place. */
+    background: linear-gradient(180deg, var(--green) 0%, #AEFF3C 14%, #EFFFD0 32%, var(--cream) 65%, var(--cream) 100%);
+}
+body::before {
+    content:'';
+    position:fixed;
+    inset:0;
+    background-image:
+        radial-gradient(circle at 15% 8%, rgba(191,243,102,0.35) 0%, transparent 42%),
+        radial-gradient(circle at 85% 92%, rgba(191,243,102,0.28) 0%, transparent 42%);
+    pointer-events:none;
+    z-index:0;
+}
+.app { position:relative; z-index:1; }
+.app { max-width:430px; margin:0 auto; min-height:100dvh; display:flex; flex-direction:column; position:relative; }
+
+.header { padding:20px 20px 30px; position:relative; }
+.header h1 { font-family:'Gaegu',cursive; font-size:26px; color:var(--green-deep); }
+.header .stage-label { font-size:12px; color:var(--brown); font-weight:700; margin-top:4px; }
+
+.message-box { margin:16px 16px 0; background:white; border-radius:var(--radius-lg); padding:14px 16px; text-align:center; box-shadow:var(--shadow-sm); border:2px solid rgba(195,255,116,0.6); }
+.message-box p { font-family:'Gaegu',cursive; font-size:19px; color:var(--green-deep); font-weight:700; }
+
+.stage-canvas-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:16px; }
+#game-canvas { width:100%; max-width:400px; touch-action:none; }
+
+.tap-hint { text-align:center; font-size:12px; color:var(--brown-light); padding-bottom:10px; min-height:18px; }
+
+.overlay { position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:24px; opacity:0; pointer-events:none; transition:opacity 0.35s; }
+.overlay.show { opacity:1; pointer-events:all; }
+.overlay-card { background:white; border-radius:var(--radius-xl); padding:30px 26px; width:100%; max-width:320px; text-align:center; box-shadow:var(--shadow-lg); position:relative; overflow:hidden; transform:scale(0.8) translateY(30px); transition:transform 0.45s cubic-bezier(.34,1.56,.64,1); }
+.overlay.show .overlay-card { transform:scale(1) translateY(0); }
+.overlay-card::before { content:''; position:absolute; top:0; left:0; right:0; height:8px; background:linear-gradient(90deg, var(--green), var(--green-mid), var(--green)); }
+.overlay-emoji { font-size:44px; margin-bottom:8px; }
+.overlay-title { font-family:'Gaegu',cursive; font-size:26px; font-weight:700; color:var(--green-deep); margin-bottom:8px; }
+.overlay-sub { font-size:13px; color:var(--brown-light); line-height:1.6; margin-bottom:22px; }
+.overlay-btn { width:100%; padding:14px; border:none; border-radius:var(--radius-md); background:var(--green-deep); color:var(--green); font-size:15px; font-weight:700; font-family:'Noto Sans KR',sans-serif; cursor:pointer; }
+.overlay-btn:active { transform:scale(0.97); }
+.home-link { display:block; margin-top:12px; font-size:12px; font-weight:700; color:var(--brown-light); text-decoration:none; padding:6px; }
+.home-link:active { opacity:0.6; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>🥤 야바위</h1>
+    <div class="stage-label" id="stage-label">스테이지 1 / 3</div>
+  </div>
+
+  <div class="message-box"><p id="message">시작 버튼을 눌러주세요</p></div>
+
+  <div class="stage-canvas-wrap">
+    <canvas id="game-canvas"></canvas>
+  </div>
+  <div class="tap-hint" id="tap-hint"></div>
+</div>
+
+<div class="overlay show" id="title-overlay">
+  <div class="overlay-card">
+    <div class="overlay-emoji">🥤</div>
+    <div class="overlay-title">야바위</div>
+    <p class="overlay-sub">컵 아래 숨은 캐릭터를 잘 보고<br>기억해서 맞춰보세요!<br>총 3스테이지, 뒤로 갈수록 어려워져요.</p>
+    <button class="overlay-btn" id="start-btn">시작하기</button>
+    <a class="home-link" href="/">🏠 메인으로</a>
+  </div>
+</div>
+
+<div class="overlay" id="result-overlay">
+  <div class="overlay-card">
+    <div class="overlay-emoji" id="result-emoji">🎉</div>
+    <div class="overlay-title" id="result-title">정답!</div>
+    <p class="overlay-sub" id="result-sub"></p>
+    <button class="overlay-btn" id="result-btn">다음</button>
+  </div>
+</div>
+
+<script src="/progress.js"></script>
+<script>
+// ---------------------------------------------------------------------
+// ASSET SLOTS — replace these draw functions' fill logic with
+// ctx.drawImage(yourImage, ...) once real illustrations are ready.
+// Recommended source art: 1:1 square, 512x512px (or 400x400), PNG with
+// transparent background, for BOTH 청풋 and 청무.
+// ---------------------------------------------------------------------
+const CHARACTERS = {
+  cheongfoot: { label: '청풋', color: '#8BCC2A', accent: '#3D6B00', emoji: '🍏' },
+  cheongmu:   { label: '청무', color: '#7EC8E3', accent: '#2E6E8E', emoji: '🥬' }
+};
+
+const STAGES = [
+  { cupCount: 3, character: 'cheongfoot', swapCountRange: [4, 6],  swapDurationRange: [550, 750] }, // 하
+  { cupCount: 3, character: 'cheongmu',   swapCountRange: [6, 8],  swapDurationRange: [420, 560] }, // 중
+  { cupCount: 5, character: 'cheongfoot', swapCountRange: [9, 13], swapDurationRange: [300, 420] }  // 중~상
+];
+
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+const messageEl = document.getElementById('message');
+const stageLabelEl = document.getElementById('stage-label');
+const tapHintEl = document.getElementById('tap-hint');
+
+let stageIndex = 0;
+let cups = [];          // { slot, x, targetX, correct, lifted, liftAmount }
+let canvasW = 400, canvasH = 260;
+let inputEnabled = false;
+let animating = false;
+
+function resizeCanvas() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvasW = Math.min(rect.width, 400);
+  canvasH = Math.max(220, Math.min(rect.height, 300));
+  canvas.width = Math.round(canvasW * dpr);
+  canvas.height = Math.round(canvasH * dpr);
+  canvas.style.width = canvasW + 'px';
+  canvas.style.height = canvasH + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resizeCanvas);
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+function rand(min, max) { return min + Math.random() * (max - min); }
+function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
+
+function slotX(slot, count) {
+  const margin = 40;
+  const usable = canvasW - margin * 2;
+  return margin + (usable * (slot + 0.5)) / count;
+}
+
+function setupStage() {
+  const stage = STAGES[stageIndex];
+  const correctSlot = randInt(0, stage.cupCount - 1);
+  cups = [];
+  for (let i = 0; i < stage.cupCount; i++) {
+    const x = slotX(i, stage.cupCount);
+    cups.push({ slot: i, x, targetX: x, correct: i === correctSlot, lifted: 0 });
+  }
+  stageLabelEl.textContent = `스테이지 ${stageIndex + 1} / ${STAGES.length}`;
+}
+
+function drawCharacter(x, y, characterKey, scale = 1) {
+  const c = CHARACTERS[characterKey];
+  const r = 26 * scale;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = c.color;
+  ctx.beginPath();
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = c.accent;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.font = (18 * scale) + 'px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(c.emoji, 0, -2 * scale);
+  ctx.fillStyle = c.accent;
+  ctx.font = 'bold ' + (10 * scale) + 'px "Noto Sans KR", sans-serif';
+  ctx.fillText(c.label, 0, 18 * scale);
+  ctx.restore();
+}
+
+function drawCup(cup) {
+  const baseY = canvasH * 0.62;
+  const liftY = cup.lifted * 46; // how far the cup slides up to reveal
+  const topY = baseY - 70 - liftY;
+  const bottomY = baseY - liftY;
+  const topW = 24, bottomW = 42;
+
+  ctx.save();
+  ctx.globalAlpha = 1 - cup.lifted * 0.15;
+  ctx.beginPath();
+  ctx.moveTo(cup.x - bottomW, bottomY);
+  ctx.lineTo(cup.x - topW, topY);
+  ctx.quadraticCurveTo(cup.x, topY - 10, cup.x + topW, topY);
+  ctx.lineTo(cup.x + bottomW, bottomY);
+  ctx.quadraticCurveTo(cup.x, bottomY + 10, cup.x - bottomW, bottomY);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(0, topY, 0, bottomY);
+  g.addColorStop(0, '#FFFFFF');
+  g.addColorStop(1, '#E8F5D0');
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.strokeStyle = '#3D6B00';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  // rim highlight
+  ctx.beginPath();
+  ctx.ellipse(cup.x, topY, topW, 7, 0, 0, Math.PI * 2);
+  ctx.fillStyle = '#BFF366';
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function render() {
+  ctx.clearRect(0, 0, canvasW, canvasH);
+  const stage = STAGES[stageIndex];
+  const groundY = canvasH * 0.66;
+  ctx.strokeStyle = 'rgba(61,107,0,0.15)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(20, groundY);
+  ctx.lineTo(canvasW - 20, groundY);
+  ctx.stroke();
+
+  for (const cup of cups) {
+    if (cup.lifted > 0.05) {
+      drawCharacter(cup.x, groundY - 6, stage.character, 0.9);
+    }
+    drawCup(cup);
+  }
+}
+
+function loop() {
+  render();
+  requestAnimationFrame(loop);
+}
+
+// ---- Reveal -> Shuffle -> Guess flow ----
+function startStage() {
+  setupStage();
+  inputEnabled = false;
+  messageEl.textContent = '잘 보고 기억하세요!';
+  tapHintEl.textContent = '';
+  animateLift(cups.find(c => c.correct), 1, 500, () => {
+    setTimeout(() => {
+      animateLift(cups.find(c => c.correct), 0, 400, () => {
+        shuffleCups();
+      });
+    }, 900);
+  });
+}
+
+function animateLift(cup, target, duration, done) {
+  const start = cup.lifted;
+  const t0 = performance.now();
+  function step(t) {
+    const p = Math.min(1, (t - t0) / duration);
+    cup.lifted = lerp(start, target, p);
+    if (p < 1) requestAnimationFrame(step);
+    else { cup.lifted = target; if (done) done(); }
+  }
+  requestAnimationFrame(step);
+}
+
+function shuffleCups() {
+  const stage = STAGES[stageIndex];
+  const swapCount = randInt(stage.swapCountRange[0], stage.swapCountRange[1]);
+  messageEl.textContent = '섞는 중...';
+  let i = 0;
+  function doSwap() {
+    if (i >= swapCount) {
+      messageEl.textContent = '컵을 골라보세요!';
+      tapHintEl.textContent = '원하는 컵을 눌러주세요';
+      inputEnabled = true;
+      return;
+    }
+    const duration = randInt(stage.swapDurationRange[0], stage.swapDurationRange[1]);
+    const a = randInt(0, cups.length - 1);
+    let b = randInt(0, cups.length - 1);
+    while (b === a) b = randInt(0, cups.length - 1);
+
+    const cupA = cups[a], cupB = cups[b];
+    const startAx = cupA.x, startBx = cupB.x;
+    const t0 = performance.now();
+    function step(t) {
+      const p = Math.min(1, (t - t0) / duration);
+      const eased = p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p+2,2)/2;
+      cupA.x = lerp(startAx, startBx, eased);
+      cupB.x = lerp(startBx, startAx, eased);
+      if (p < 1) requestAnimationFrame(step);
+      else {
+        cupA.x = startBx; cupB.x = startAx;
+        i++;
+        doSwap();
+      }
+    }
+    requestAnimationFrame(step);
+  }
+  doSwap();
+}
+
+function handleGuess(cup) {
+  inputEnabled = false;
+  tapHintEl.textContent = '';
+  animateLift(cup, 1, 400, () => {
+    if (cup.correct) {
+      showResult(true);
+    } else {
+      const correctCup = cups.find(c => c.correct);
+      animateLift(correctCup, 1, 400, () => showResult(false));
+    }
+  });
+}
+
+function showResult(success) {
+  const overlay = document.getElementById('result-overlay');
+  const emoji = document.getElementById('result-emoji');
+  const title = document.getElementById('result-title');
+  const sub = document.getElementById('result-sub');
+  const btn = document.getElementById('result-btn');
+
+  if (success && stageIndex < STAGES.length - 1) {
+    emoji.textContent = '🎉';
+    title.textContent = '정답!';
+    sub.textContent = '다음 스테이지로 넘어갈게요.';
+    btn.textContent = '다음 스테이지';
+    btn.onclick = () => { overlay.classList.remove('show'); stageIndex++; startStage(); };
+    if (typeof SiteProgress !== 'undefined') {
+      SiteProgress.recordRun('yabawi', { completed: false, bestStageReached: stageIndex + 1 });
+    }
+  } else if (success && stageIndex === STAGES.length - 1) {
+    emoji.textContent = '🏆';
+    title.textContent = '클리어!';
+    sub.textContent = '3스테이지를 모두 성공했어요!';
+    btn.textContent = '처음부터 다시';
+    btn.onclick = () => { overlay.classList.remove('show'); stageIndex = 0; startStage(); };
+    if (typeof SiteProgress !== 'undefined') {
+      SiteProgress.recordRun('yabawi', { completed: true, bestStageReached: STAGES.length });
+    }
+  } else {
+    emoji.textContent = '😵';
+    title.textContent = '틀렸어요!';
+    sub.textContent = '다시 도전해보세요.';
+    btn.textContent = '이 스테이지 다시';
+    btn.onclick = () => { overlay.classList.remove('show'); startStage(); };
+  }
+  overlay.classList.add('show');
+}
+
+canvas.addEventListener('click', (e) => {
+  if (!inputEnabled) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  let closest = null, closestDist = Infinity;
+  for (const cup of cups) {
+    const d = Math.abs(cup.x - x);
+    if (d < closestDist) { closestDist = d; closest = cup; }
+  }
+  if (closest && closestDist < 45) handleGuess(closest);
+});
+canvas.addEventListener('touchstart', (e) => {
+  if (!inputEnabled) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.touches[0].clientX - rect.left;
+  let closest = null, closestDist = Infinity;
+  for (const cup of cups) {
+    const d = Math.abs(cup.x - x);
+    if (d < closestDist) { closestDist = d; closest = cup; }
+  }
+  if (closest && closestDist < 45) handleGuess(closest);
+}, { passive: true });
+
+document.getElementById('start-btn').addEventListener('click', () => {
+  document.getElementById('title-overlay').classList.remove('show');
+  startStage();
+});
+
+resizeCanvas();
+setupStage();
+loop();
+</script>
+</body>
+</html>

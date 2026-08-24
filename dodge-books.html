@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>책피하기</title>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+    --green: #BFF366;
+    --green-dark: #8BCC2A;
+    --green-deep: #3D6B00;
+    --green-mid: #A8E84A;
+    --cream: #FAFFF0;
+    --brown: #4A3728;
+    --brown-light: #8B6F5E;
+    --radius-xl: 24px;
+    --radius-lg: 18px;
+    --radius-md: 14px;
+    --shadow-sm: 0 2px 12px rgba(61,107,0,0.12);
+    --shadow-lg: 0 24px 60px rgba(0,0,0,0.2);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent;
+    -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+html, body { height:100%; overflow:hidden; overscroll-behavior:none; background:var(--cream); font-family:'Noto Sans KR',sans-serif; position:relative; }
+body { height:100dvh; }
+
+.canvas-wrap { position:absolute; inset:0; touch-action:none; }
+#game-canvas { display:block; width:100%; height:100%; }
+
+.hud-top { position:absolute; top:0; left:0; right:0; display:flex; align-items:center; justify-content:space-between;
+    padding:max(10px, env(safe-area-inset-top)) 16px 10px;
+    background:linear-gradient(180deg, rgba(250,255,240,0.9) 0%, rgba(250,255,240,0) 100%); pointer-events:none; }
+.logo-badge { background:var(--green-deep); color:var(--green); font-family:'Gaegu',cursive; font-size:13px; font-weight:700; padding:5px 12px; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); }
+.progress-badge { background:white; color:var(--green-deep); font-family:'Gaegu',cursive; font-size:16px; font-weight:700; padding:6px 14px; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); }
+
+.rotate-prompt { display:none; position:fixed; inset:0; z-index:2000; background:var(--cream); flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; }
+.rotate-icon { font-size:48px; animation:rotateHint 1.6s ease-in-out infinite; }
+@keyframes rotateHint { 0%,100%{transform:rotate(0deg);} 50%{transform:rotate(-90deg);} }
+.rotate-prompt p { font-family:'Gaegu',cursive; font-size:20px; color:var(--green-deep); font-weight:700; }
+@media (orientation:portrait) { .rotate-prompt{display:flex;} .canvas-wrap{display:none;} }
+
+.overlay { position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:24px; opacity:0; pointer-events:none; transition:opacity 0.35s; }
+.overlay.show { opacity:1; pointer-events:all; }
+.overlay-card { background:white; border-radius:var(--radius-xl); padding:28px 26px; width:100%; max-width:300px; text-align:center; box-shadow:var(--shadow-lg); position:relative; overflow:hidden; transform:scale(0.8) translateY(30px); transition:transform 0.45s cubic-bezier(.34,1.56,.64,1); }
+.overlay.show .overlay-card { transform:scale(1) translateY(0); }
+.overlay-card::before { content:''; position:absolute; top:0; left:0; right:0; height:8px; background:linear-gradient(90deg, var(--green), var(--green-mid), var(--green)); }
+.overlay-emoji { font-size:42px; margin-bottom:8px; }
+.overlay-title { font-family:'Gaegu',cursive; font-size:24px; font-weight:700; color:var(--green-deep); margin-bottom:8px; }
+.overlay-sub { font-size:13px; color:var(--brown-light); line-height:1.6; margin-bottom:20px; }
+.overlay-btn { width:100%; padding:13px; border:none; border-radius:var(--radius-md); background:var(--green-deep); color:var(--green); font-size:15px; font-weight:700; font-family:'Noto Sans KR',sans-serif; cursor:pointer; }
+.overlay-btn:active { transform:scale(0.97); }
+.home-link { display:block; margin-top:12px; font-size:12px; font-weight:700; color:var(--brown-light); text-decoration:none; padding:6px; }
+.home-link:active { opacity:0.6; }
+</style>
+</head>
+<body>
+
+<div class="canvas-wrap">
+  <canvas id="game-canvas"></canvas>
+  <div class="hud-top">
+    <div class="logo-badge">📚 책피하기</div>
+    <div class="progress-badge"><span id="progress-count">0</span> / 15</div>
+  </div>
+</div>
+
+<div class="rotate-prompt">
+  <div class="rotate-icon">🔄</div>
+  <p>화면을 가로로 돌려주세요</p>
+</div>
+
+<div class="overlay show" id="title-overlay">
+  <div class="overlay-card">
+    <div class="overlay-emoji">📚</div>
+    <div class="overlay-title">책피하기</div>
+    <p class="overlay-sub">오른쪽에서 날아오는 책 15개를<br>피하면 성공이에요!<br>손가락으로 위아래로 움직여서 피하세요.</p>
+    <button class="overlay-btn" id="start-btn">시작하기</button>
+    <a class="home-link" href="/">🏠 메인으로</a>
+  </div>
+</div>
+
+<div class="overlay" id="result-overlay">
+  <div class="overlay-card">
+    <div class="overlay-emoji" id="result-emoji">🎉</div>
+    <div class="overlay-title" id="result-title">성공!</div>
+    <p class="overlay-sub" id="result-sub"></p>
+    <button class="overlay-btn" id="result-btn">다시 하기</button>
+  </div>
+</div>
+
+<script src="/progress.js"></script>
+<script>
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+const progressEl = document.getElementById('progress-count');
+
+const GOAL = 15;
+const CONFIG = {
+  playerRadius: 22,
+  playerX: 90,               // fixed x position near the left edge
+  bookWidth: 46,
+  bookHeight: 34,
+  // 난이도: 하, 속도는 좀 더 빠르게 조정
+  bookSpeedRange: [260, 360],   // px/sec, right-to-left (was 180-260)
+  spawnIntervalRange: [500, 800], // ms between spawns (was 700-1100)
+  hitboxShrink: 0.78            // slightly forgiving collision (visual size * this = hit size)
+};
+
+let viewW = 0, viewH = 0;
+let player = { y: 0, targetY: 0 };
+let books = [];
+let dodged = 0;
+let spawnedCount = 0;
+let gameOver = false;
+let running = false;
+let lastTimestamp = null;
+let nextSpawnAt = 0;
+
+function resizeCanvas() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const rect = canvas.parentElement.getBoundingClientRect();
+  viewW = rect.width; viewH = rect.height;
+  canvas.width = Math.round(viewW * dpr);
+  canvas.height = Math.round(viewH * dpr);
+  canvas.style.width = viewW + 'px';
+  canvas.style.height = viewH + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  player.y = viewH / 2;
+  player.targetY = player.y;
+}
+window.addEventListener('resize', resizeCanvas);
+window.addEventListener('orientationchange', resizeCanvas);
+
+function rand(min, max) { return min + Math.random() * (max - min); }
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+// ---- Touch/mouse: player Y follows the finger directly ----
+function setPlayerTargetFromClientY(clientY) {
+  const rect = canvas.getBoundingClientRect();
+  player.targetY = clamp(clientY - rect.top, CONFIG.playerRadius + 10, viewH - CONFIG.playerRadius - 10);
+}
+canvas.addEventListener('touchstart', (e) => setPlayerTargetFromClientY(e.touches[0].clientY), { passive: true });
+canvas.addEventListener('touchmove', (e) => setPlayerTargetFromClientY(e.touches[0].clientY), { passive: true });
+let mouseDown = false;
+canvas.addEventListener('mousedown', (e) => { mouseDown = true; setPlayerTargetFromClientY(e.clientY); });
+window.addEventListener('mousemove', (e) => { if (mouseDown) setPlayerTargetFromClientY(e.clientY); });
+window.addEventListener('mouseup', () => { mouseDown = false; });
+
+function spawnBook() {
+  books.push({
+    x: viewW + 40,
+    y: rand(40, viewH - 40),
+    speed: rand(CONFIG.bookSpeedRange[0], CONFIG.bookSpeedRange[1]),
+    rotation: rand(-0.3, 0.3),
+    rotationSpeed: rand(-1.5, 1.5),
+    passed: false
+  });
+}
+
+function drawPlayer() {
+  // ---------------------------------------------------------------
+  // ASSET SLOT: swap this circle+emoji for ctx.drawImage(yourSprite, ...)
+  // once real character art is ready. Recommended: 1:1 square, 512x512.
+  // ---------------------------------------------------------------
+  ctx.save();
+  ctx.translate(CONFIG.playerX, player.y);
+  ctx.fillStyle = '#8BCC2A';
+  ctx.beginPath();
+  ctx.arc(0, 0, CONFIG.playerRadius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#3D6B00';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.font = '22px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🍏', 0, -1);
+  ctx.restore();
+}
+
+function drawBook(book) {
+  ctx.save();
+  ctx.translate(book.x, book.y);
+  ctx.rotate(book.rotation);
+  const w = CONFIG.bookWidth, h = CONFIG.bookHeight;
+  ctx.fillStyle = '#B4552D';
+  ctx.fillRect(-w/2, -h/2, w, h);
+  ctx.fillStyle = '#F4E9D8';
+  ctx.fillRect(-w/2 + 4, -h/2 + 4, w - 10, h - 8);
+  ctx.strokeStyle = '#7A3010';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(-w/2, -h/2, w, h);
+  ctx.restore();
+}
+
+function drawSky() {
+  const g = ctx.createLinearGradient(0, 0, 0, viewH);
+  g.addColorStop(0, '#C8FF6E');
+  g.addColorStop(1, '#F3FFD9');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, viewW, viewH);
+}
+
+function checkCollision(book) {
+  const hitR = CONFIG.playerRadius * CONFIG.hitboxShrink;
+  const bw = CONFIG.bookWidth * CONFIG.hitboxShrink;
+  const bh = CONFIG.bookHeight * CONFIG.hitboxShrink;
+  const closestX = clamp(CONFIG.playerX, book.x - bw/2, book.x + bw/2);
+  const closestY = clamp(player.y, book.y - bh/2, book.y + bh/2);
+  const dx = CONFIG.playerX - closestX;
+  const dy = player.y - closestY;
+  return (dx*dx + dy*dy) < hitR*hitR;
+}
+
+function endGame(success) {
+  gameOver = true;
+  running = false;
+  const overlay = document.getElementById('result-overlay');
+  const emoji = document.getElementById('result-emoji');
+  const title = document.getElementById('result-title');
+  const sub = document.getElementById('result-sub');
+  if (success) {
+    emoji.textContent = '🎉';
+    title.textContent = '성공!';
+    sub.textContent = '책 ' + GOAL + '개를 전부 피했어요!';
+  } else {
+    emoji.textContent = '📕';
+    title.textContent = '맞았어요!';
+    sub.textContent = dodged + '개까지 피했어요. 다시 도전해보세요!';
+  }
+  if (typeof SiteProgress !== 'undefined') {
+    SiteProgress.recordRun('dodgeBooks', { completed: success, bestDodged: dodged });
+  }
+  overlay.classList.add('show');
+}
+
+function update(dt, timestampMs) {
+  player.y += (player.targetY - player.y) * 0.25;
+
+  if (timestampMs >= nextSpawnAt && spawnedCount < GOAL) {
+    spawnBook();
+    spawnedCount++;
+    nextSpawnAt = timestampMs + rand(CONFIG.spawnIntervalRange[0], CONFIG.spawnIntervalRange[1]);
+  }
+
+  for (let i = books.length - 1; i >= 0; i--) {
+    const book = books[i];
+    book.x -= book.speed * dt;
+    book.rotation += book.rotationSpeed * dt;
+
+    if (!book.passed && book.x < CONFIG.playerX - CONFIG.bookWidth) {
+      book.passed = true;
+      dodged++;
+      progressEl.textContent = dodged;
+      if (dodged >= GOAL) { endGame(true); }
+    }
+
+    if (checkCollision(book)) {
+      endGame(false);
+      return;
+    }
+
+    if (book.x < -60) books.splice(i, 1);
+  }
+}
+
+function render() {
+  drawSky();
+  for (const book of books) drawBook(book);
+  drawPlayer();
+}
+
+let rafId = null;
+function loop(timestampMs) {
+  if (!running) return;
+  const dt = lastTimestamp !== null ? Math.min(0.05, (timestampMs - lastTimestamp) / 1000) : 1/60;
+  lastTimestamp = timestampMs;
+  update(dt, timestampMs);
+  render();
+  if (!gameOver) rafId = requestAnimationFrame(loop);
+}
+
+function startGame() {
+  books = [];
+  dodged = 0;
+  spawnedCount = 0;
+  gameOver = false;
+  running = true;
+  lastTimestamp = null;
+  progressEl.textContent = 0;
+  nextSpawnAt = 0;
+  document.getElementById('title-overlay').classList.remove('show');
+  document.getElementById('result-overlay').classList.remove('show');
+  requestAnimationFrame(loop);
+}
+
+document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('result-btn').addEventListener('click', startGame);
+
+resizeCanvas();
+drawSky();
+drawPlayer();
+</script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!--
+=============================================================================
+메인 사이트 통합 스니펫
+=============================================================================
+이 블록을 기존 index.html의 <div class="app"> 안, 원하는 위치에 붙여넣으세요.
+(예: 퍼즐 현황 섹션 다음, bottom-pad 위)
+
+CSS는 기존 style.css 맨 아래에 그대로 추가하시면 돼요 — 새 변수 없이
+기존 :root 변수(--green, --radius-*, --shadow-* 등)를 그대로 재사용합니다.
+
+경로 안내:
+  이 스니펫은 게임 파일들이 사이트 루트에 이렇게 있다고 가정해요:
+    /car/               (car-game 폴더를 "car"로 이름 바꿔서 올리면 /car/index.html이 자동으로 이 주소가 됨)
+    /yabawi.html
+    /dodge-books.html
+    /qr-scan.html
+    /progress.js
+  실제 배포 폴더 구조가 다르면 href만 맞게 고치면 됩니다.
+=============================================================================
+-->
+
+<!-- 미니게임 섹션 -->
+<div class="section-title" style="margin-top:28px">
+  <span>🎮 미니게임</span>
+</div>
+
+<div class="game-launcher-list">
+  <a class="game-launcher-card" href="/car/">
+    <div class="game-launcher-icon">🚗</div>
+    <div class="game-launcher-info">
+      <h4>풋 레이서</h4>
+      <p>언덕을 넘으며 코인을 모아보세요</p>
+    </div>
+    <div class="game-launcher-arrow">›</div>
+  </a>
+
+  <a class="game-launcher-card" href="/yabawi.html">
+    <div class="game-launcher-icon">🥤</div>
+    <div class="game-launcher-info">
+      <h4>야바위</h4>
+      <p>컵 속 마스코트를 맞춰보세요</p>
+    </div>
+    <div class="game-launcher-arrow">›</div>
+  </a>
+
+  <a class="game-launcher-card" href="/dodge-books.html">
+    <div class="game-launcher-icon">📚</div>
+    <div class="game-launcher-info">
+      <h4>책피하기</h4>
+      <p>날아오는 책 15개를 피해보세요</p>
+    </div>
+    <div class="game-launcher-arrow">›</div>
+  </a>
+</div>
+
+<!-- QR 스캔 진입 버튼 (플로팅) -->
+<a class="qr-fab" href="/qr-scan.html" aria-label="QR 스캔">📷</a>
+
+<!--
+=============================================================================
+CSS — 기존 style.css 맨 아래에 추가
+=============================================================================
+-->
+<style>
+.game-launcher-list {
+    margin: 12px 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.game-launcher-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow-sm);
+    border: 2px solid transparent;
+    text-decoration: none;
+    transition: transform 0.2s, border-color 0.2s;
+}
+.game-launcher-card:active {
+    transform: scale(0.98);
+    border-color: var(--green);
+}
+.game-launcher-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    background: #F0F7E0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+}
+.game-launcher-info { flex: 1; min-width: 0; }
+.game-launcher-info h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--brown);
+    margin-bottom: 2px;
+}
+.game-launcher-info p {
+    font-size: 11px;
+    color: var(--brown-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.game-launcher-arrow {
+    font-size: 22px;
+    color: var(--green-dark);
+    flex-shrink: 0;
+}
+
+.qr-fab {
+    position: fixed;
+    right: 20px;
+    bottom: max(20px, env(safe-area-inset-bottom));
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--green-deep);
+    color: var(--green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    text-decoration: none;
+    box-shadow: var(--shadow-md);
+    z-index: 100;
+}
+.qr-fab:active { transform: scale(0.92); }
+</style>
