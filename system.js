@@ -7,6 +7,16 @@ const LOCATIONS = [
   { id: 5, name: '도서관 내부',    hint: '신간 코너 책꽂이 사이',      emoji: '🔖', piece: '조각 5', pieceEmoji: '🏆', pieceLabel: '완성!' },
 ];
 
+// ── 미니게임 링크 매핑 (임시) ─────────────────────
+// 어느 위치에서 어느 게임으로 보낼지 아직 확정 전이라 일단 조각1/3/5에
+// 랜덤 배정해둠. 순서 정해지면 이 매핑만 바꾸면 됨 — location id를
+// key로, 게임 경로를 value로.
+const GAME_LINKS = {
+  1: '/car/',           // 조각 1 (도서관 입구) → 풋 레이서
+  3: '/yabawi.html',     // 조각 3 (학교 정원)   → 야바위
+  5: '/dodge-books.html' // 조각 5 (도서관 내부) → 책피하기
+};
+
 // ── 스토리지 키 ──────────────────────────────────
 const KEY_COLLECTED = 'poot_collected_v1';
 const KEY_CODE      = 'poot_complete_code';
@@ -64,8 +74,22 @@ function render(newlyFilledId = null) {
   list.innerHTML = '';
   LOCATIONS.forEach(loc => {
     const done = collected.includes(loc.id);
+    const gameLink = GAME_LINKS[loc.id]; // undefined면 게임 연결 없는 위치
+
     const card = document.createElement('div');
     card.className = 'location-card' + (done ? ' done' : '');
+
+    let actionHtml;
+    if (gameLink) {
+      // 게임이 연결된 위치: QR스캐너 대신 바로 게임 페이지로 이동하는 링크.
+      // scan-btn과 동일한 스타일이라 버튼처럼 보이지만 실제로는 <a> 태그.
+      actionHtml = `<a class="scan-btn" href="${gameLink}" style="text-decoration:none;">🎮 이동</a>`;
+    } else if (done) {
+      actionHtml = '<button class="scan-btn scanned" disabled>완료 ✓</button>';
+    } else {
+      actionHtml = `<button class="scan-btn" onclick="collect(${loc.id}, event)">📷 스캔</button>`;
+    }
+
     card.innerHTML = `
       <div class="loc-icon">${loc.emoji}</div>
       <div class="loc-info">
@@ -73,9 +97,7 @@ function render(newlyFilledId = null) {
         <p>${done ? '✅ 수집 완료' : loc.hint}</p>
       </div>
       <span class="loc-piece-badge">${loc.piece}</span>
-      ${done
-        ? '<button class="scan-btn scanned" disabled>완료 ✓</button>'
-        : `<button class="scan-btn" onclick="collect(${loc.id}, event)">📷 스캔</button>`}`;
+      ${actionHtml}`;
     list.appendChild(card);
   });
 
