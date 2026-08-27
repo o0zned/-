@@ -12,11 +12,6 @@ const Physics = {
         this.engine.velocityIterations = PHYSICS_CONFIG.velocityIterations;
         this.world = this.engine.world;
 
-        // All car parts (chassis + both wheels) share this negative
-        // collision group, which makes Matter skip collision checks
-        // between them entirely — otherwise the wheels and chassis,
-        // being physically overlapping-ish by design, would constantly
-        // collide with each other and make the car explode/jitter.
         this.carCollisionGroup = Matter.Body.nextGroup(true);
     },
 
