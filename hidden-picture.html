@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>숨은그림찾기</title>
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+    --green: #BFF366;
+    --green-dark: #8BCC2A;
+    --green-deep: #3D6B00;
+    --green-mid: #A8E84A;
+    --cream: #FAFFF0;
+    --brown: #4A3728;
+    --brown-light: #8B6F5E;
+    --radius-xl: 24px;
+    --radius-lg: 18px;
+    --radius-md: 14px;
+    --shadow-sm: 0 2px 12px rgba(61,107,0,0.12);
+    --shadow-lg: 0 24px 60px rgba(0,0,0,0.2);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent;
+    -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+html, body { height:100%; overflow:hidden; overscroll-behavior:none; font-family:'Noto Sans KR',sans-serif; position:relative; }
+body { background: linear-gradient(180deg, #C8FF6E 0%, #F3FFD9 100%); }
+body::before {
+    content:''; position:fixed; inset:0;
+    background-image:
+        radial-gradient(circle at 15% 8%, rgba(191,243,102,0.35) 0%, transparent 42%),
+        radial-gradient(circle at 85% 92%, rgba(191,243,102,0.28) 0%, transparent 42%);
+    pointer-events:none; z-index:0;
+}
+
+.canvas-wrap { position:absolute; inset:0; touch-action:none; z-index:1; }
+#game-canvas { display:block; width:100%; height:100%; }
+
+.hud-top {
+    position:absolute; top:0; left:0; right:0; z-index:2;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:max(10px, env(safe-area-inset-top)) 16px 10px;
+    background:linear-gradient(180deg, rgba(250,255,240,0.9) 0%, rgba(250,255,240,0) 100%);
+    pointer-events:none;
+}
+.hud-top > * { pointer-events:auto; }
+.hud-left { display:flex; align-items:center; gap:8px; }
+.home-btn {
+    width:34px; height:34px; border-radius:50%; background:white;
+    display:flex; align-items:center; justify-content:center; font-size:15px;
+    text-decoration:none; box-shadow:var(--shadow-sm); flex-shrink:0;
+}
+.home-btn:active { transform:scale(0.92); }
+.title-badge { background:var(--green-deep); color:var(--green); font-family:'Gaegu',cursive; font-size:14px; font-weight:700; padding:5px 12px; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); }
+
+.find-list {
+    display:flex; gap:6px; background:white; border-radius:var(--radius-lg);
+    padding:6px 10px; box-shadow:var(--shadow-sm);
+}
+.find-item {
+    width:26px; height:26px; border-radius:50%; background:#F0F4E0;
+    display:flex; align-items:center; justify-content:center; font-size:15px;
+    opacity:0.35; filter:grayscale(1); transition:all 0.3s;
+}
+.find-item.found { opacity:1; filter:none; background:var(--green); transform:scale(1.1); }
+
+.rotate-prompt { display:none; position:fixed; inset:0; z-index:2000; background:var(--cream); flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; }
+.rotate-icon { font-size:48px; animation:rotateHint 1.6s ease-in-out infinite; }
+@keyframes rotateHint { 0%,100%{transform:rotate(0deg);} 50%{transform:rotate(-90deg);} }
+.rotate-prompt p { font-family:'Gaegu',cursive; font-size:20px; color:var(--green-deep); font-weight:700; }
+@media (orientation:portrait) { .rotate-prompt{display:flex;} .canvas-wrap, .hud-top {display:none;} }
+
+.overlay { position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:24px; opacity:0; pointer-events:none; transition:opacity 0.35s; }
+.overlay.show { opacity:1; pointer-events:all; }
+.overlay-card { background:white; border-radius:var(--radius-xl); padding:26px 24px; width:100%; max-width:300px; text-align:center; box-shadow:var(--shadow-lg); position:relative; overflow:hidden; transform:scale(0.8) translateY(30px); transition:transform 0.45s cubic-bezier(.34,1.56,.64,1); }
+.overlay.show .overlay-card { transform:scale(1) translateY(0); }
+.overlay-card::before { content:''; position:absolute; top:0; left:0; right:0; height:8px; background:linear-gradient(90deg, var(--green), var(--green-mid), var(--green)); }
+.overlay-emoji { font-size:40px; margin-bottom:8px; }
+.overlay-title { font-family:'Gaegu',cursive; font-size:24px; font-weight:700; color:var(--green-deep); margin-bottom:8px; }
+.overlay-sub { font-size:13px; color:var(--brown-light); line-height:1.6; margin-bottom:20px; }
+.overlay-btn { width:100%; padding:13px; border:none; border-radius:var(--radius-md); background:var(--green-deep); color:var(--green); font-size:15px; font-weight:700; font-family:'Noto Sans KR',sans-serif; cursor:pointer; }
+.overlay-btn:active { transform:scale(0.97); }
+.home-link { display:block; margin-top:10px; font-size:12px; font-weight:700; color:var(--brown-light); text-decoration:none; padding:6px; }
+.home-link:active { opacity:0.6; }
+
+.found-toast {
+    position:absolute; z-index:3; pointer-events:none;
+    font-family:'Gaegu',cursive; font-weight:700; color:var(--green-deep);
+    font-size:16px; opacity:0; transition:none;
+}
+</style>
+</head>
+<body>
+
+<div class="canvas-wrap">
+  <canvas id="game-canvas"></canvas>
+</div>
+
+<div class="hud-top">
+  <div class="hud-left">
+    <a href="/" class="home-btn" title="메인으로">🏠</a>
+    <div class="title-badge">🔍 숨은그림찾기</div>
+  </div>
+  <div class="find-list" id="find-list"></div>
+</div>
+
+<div class="rotate-prompt">
+  <div class="rotate-icon">🔄</div>
+  <p>화면을 가로로 돌려주세요</p>
+</div>
+
+<div class="overlay show" id="title-overlay">
+  <div class="overlay-card">
+    <div class="overlay-emoji">🔍</div>
+    <div class="overlay-title">숨은그림찾기</div>
+    <p class="overlay-sub">그림 속에 숨어있는 물건 6개를<br>모두 찾아보세요!<br>화면을 톡톡 눌러서 찾으면 돼요.</p>
+    <button class="overlay-btn" id="start-btn">시작하기</button>
+    <a class="home-link" href="/">🏠 메인으로</a>
+  </div>
+</div>
+
+<div class="overlay" id="result-overlay">
+  <div class="overlay-card">
+    <div class="overlay-emoji">🎉</div>
+    <div class="overlay-title">다 찾았어요!</div>
+    <p class="overlay-sub" id="result-sub"></p>
+    <button class="overlay-btn" id="result-btn">다시 하기</button>
+    <a class="home-link" id="home-link" href="/">🏠 메인으로</a>
+  </div>
+</div>
+
+<script src="/progress.js"></script>
+<script>
+/**
+ * -----------------------------------------------------------------------
+ * PLACEHOLDER ART NOTICE
+ * -----------------------------------------------------------------------
+ * There's no real background scene or object illustrations yet, so both
+ * are drawn from scratch with Canvas primitives + emoji below. Once real
+ * art exists:
+ *   - Swap drawSceneBackground() to draw a single background <img> via
+ *     ctx.drawImage(bgImage, 0, 0, canvasW, canvasH) instead of the
+ *     generated grass/tree/cloud shapes.
+ *   - Swap the emoji in HIDDEN_OBJECTS + drawObject() for small object
+ *     sprites (recommend ~120x120px, transparent PNG each) drawn with
+ *     ctx.drawImage at each object's x/y.
+ * Nothing else about the game logic (placement, tap detection, found
+ * tracking) needs to change when that swap happens.
+ * -----------------------------------------------------------------------
+ */
+const HIDDEN_OBJECTS = [
+  { id: 'apple',  emoji: '🍏', label: '사과' },
+  { id: 'leaf',   emoji: '🌿', label: '나뭇잎' },
+  { id: 'book',   emoji: '📚', label: '책' },
+  { id: 'star',   emoji: '⭐', label: '별' },
+  { id: 'key',    emoji: '🔑', label: '열쇠' },
+  { id: 'flower', emoji: '🌸', label: '꽃' }
+];
+
+const OBJECT_RADIUS = 20;       // tap-detection radius, px
+const MIN_OBJECT_SPACING = 70;  // keep hidden objects from overlapping each other
+
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+const findListEl = document.getElementById('find-list');
+
+let canvasW = 800, canvasH = 400;
+let objects = [];       // { id, emoji, x, y, rot, found }
+let foundCount = 0;
+let startTime = null;
+let gameActive = false;
+let decorations = [];   // background trees/bushes/clouds, regenerated per game for a little variety
+
+function rand(min, max) { return min + Math.random() * (max - min); }
+function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
+
+function resizeCanvas() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvasW = rect.width;
+  canvasH = rect.height;
+  canvas.width = Math.round(canvasW * dpr);
+  canvas.height = Math.round(canvasH * dpr);
+  canvas.style.width = canvasW + 'px';
+  canvas.style.height = canvasH + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', resizeCanvas);
+window.addEventListener('orientationchange', resizeCanvas);
+
+// ---- Scene setup ----------------------------------------------------
+function generateDecorations() {
+  decorations = [];
+  // A handful of trees/bushes scattered around — purely decorative,
+  // gives the hidden objects some "clutter" to blend into.
+  for (let i = 0; i < 7; i++) {
+    decorations.push({
+      type: 'tree',
+      x: rand(30, canvasW - 30),
+      y: rand(canvasH * 0.35, canvasH * 0.85),
+      scale: rand(0.7, 1.3)
+    });
+  }
+  for (let i = 0; i < 3; i++) {
+    decorations.push({
+      type: 'cloud',
+      x: rand(60, canvasW - 60),
+      y: rand(30, canvasH * 0.22),
+      scale: rand(0.8, 1.2)
+    });
+  }
+}
+
+function placeObjects() {
+  objects = [];
+  const margin = 50;
+  for (const def of HIDDEN_OBJECTS) {
+    let x, y, tries = 0, ok = false;
+    while (tries < 60 && !ok) {
+      x = rand(margin, canvasW - margin);
+      y = rand(canvasH * 0.22, canvasH - margin);
+      ok = objects.every(o => Math.hypot(o.x - x, o.y - y) > MIN_OBJECT_SPACING);
+      tries++;
+    }
+    objects.push({ id: def.id, emoji: def.emoji, label: def.label, x, y, rot: rand(-0.3, 0.3), found: false });
+  }
+}
+
+function renderFindList() {
+  findListEl.innerHTML = '';
+  for (const def of HIDDEN_OBJECTS) {
+    const obj = objects.find(o => o.id === def.id);
+    const div = document.createElement('div');
+    div.className = 'find-item' + (obj && obj.found ? ' found' : '');
+    div.textContent = def.emoji;
+    findListEl.appendChild(div);
+  }
+}
+
+// ---- Drawing ----------------------------------------------------------
+function drawSky() {
+  const g = ctx.createLinearGradient(0, 0, 0, canvasH);
+  g.addColorStop(0, '#BEEBFF');
+  g.addColorStop(1, '#EAFCE0');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, canvasW, canvasH);
+}
+
+function drawGround() {
+  const groundY = canvasH * 0.3;
+  const g = ctx.createLinearGradient(0, groundY, 0, canvasH);
+  g.addColorStop(0, '#9FE320');
+  g.addColorStop(1, '#4B8A00');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, groundY, canvasW, canvasH - groundY);
+}
+
+function drawCloud(x, y, scale) {
+  ctx.save();
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = '#FFFFFF';
+  ctx.beginPath();
+  ctx.ellipse(x, y, 26 * scale, 14 * scale, 0, 0, Math.PI * 2);
+  ctx.ellipse(x + 20 * scale, y - 6 * scale, 18 * scale, 12 * scale, 0, 0, Math.PI * 2);
+  ctx.ellipse(x - 20 * scale, y + 2 * scale, 16 * scale, 10 * scale, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawTree(x, y, scale) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.fillStyle = '#7A5230';
+  ctx.fillRect(-5, 0, 10, 26);
+  ctx.fillStyle = '#4C8A1F';
+  ctx.beginPath();
+  ctx.arc(0, -10, 22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#5FA828';
+  ctx.beginPath();
+  ctx.arc(-10, -2, 14, 0, Math.PI * 2);
+  ctx.arc(12, -4, 15, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawSceneBackground() {
+  drawSky();
+  for (const d of decorations) if (d.type === 'cloud') drawCloud(d.x, d.y, d.scale);
+  drawGround();
+  for (const d of decorations) if (d.type === 'tree') drawTree(d.x, d.y, d.scale);
+}
+
+function drawObject(obj) {
+  if (obj.found) return; // found objects disappear from the scene
+  ctx.save();
+  ctx.translate(obj.x, obj.y);
+  ctx.rotate(obj.rot);
+  ctx.globalAlpha = 0.92; // slightly blended into the busy background
+  ctx.font = '26px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(obj.emoji, 0, 0);
+  ctx.restore();
+}
+
+function render() {
+  drawSceneBackground();
+  for (const obj of objects) drawObject(obj);
+}
+
+function loop() {
+  render();
+  requestAnimationFrame(loop);
+}
+
+// ---- Found feedback (floating label + particles) -----------------------
+function spawnFoundFeedback(x, y, label) {
+  const toast = document.createElement('div');
+  toast.className = 'found-toast';
+  toast.textContent = '✅ ' + label + '!';
+  toast.style.left = x + 'px';
+  toast.style.top = y + 'px';
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => {
+    toast.style.transition = 'transform 0.8s ease-out, opacity 0.8s ease-out';
+    toast.style.transform = 'translateY(-30px)';
+    toast.style.opacity = '1';
+  });
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 300);
+  }, 700);
+}
+
+// ---- Input ---------------------------------------------------------------
+function handleTap(clientX, clientY) {
+  if (!gameActive) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = clientX - rect.left;
+  const y = clientY - rect.top;
+
+  for (const obj of objects) {
+    if (obj.found) continue;
+    if (Math.hypot(obj.x - x, obj.y - y) < OBJECT_RADIUS) {
+      obj.found = true;
+      foundCount++;
+      renderFindList();
+      spawnFoundFeedback(clientX, clientY, obj.label);
+      if (foundCount >= HIDDEN_OBJECTS.length) {
+        setTimeout(() => endGame(), 500);
+      }
+      return;
+    }
+  }
+}
+canvas.addEventListener('click', (e) => handleTap(e.clientX, e.clientY));
+canvas.addEventListener('touchstart', (e) => {
+  const t = e.touches[0];
+  handleTap(t.clientX, t.clientY);
+}, { passive: true });
+
+// ---- Game flow ----------------------------------------------------------
+function startGame() {
+  generateDecorations();
+  placeObjects();
+  renderFindList();
+  foundCount = 0;
+  startTime = performance.now();
+  gameActive = true;
+  document.getElementById('title-overlay').classList.remove('show');
+  document.getElementById('result-overlay').classList.remove('show');
+}
+
+function endGame() {
+  gameActive = false;
+  const elapsedSec = Math.round((performance.now() - startTime) / 1000);
+  document.getElementById('result-sub').textContent = `${elapsedSec}초 만에 전부 찾았어요!`;
+
+  if (typeof SiteProgress !== 'undefined') {
+    SiteProgress.recordRun('hiddenPicture', { completed: true, lastTimeMs: elapsedSec * 1000 });
+  }
+  // Clearing collects this game's puzzle piece on the main site.
+  document.getElementById('home-link').href = '/?piece=4';
+
+  document.getElementById('result-overlay').classList.add('show');
+}
+
+document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('result-btn').addEventListener('click', startGame);
+
+resizeCanvas();
+generateDecorations();
+loop();
+</script>
+</body>
+</html>

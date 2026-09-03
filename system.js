@@ -3,18 +3,18 @@ const LOCATIONS = [
   { id: 1, name: '도서관 입구',    hint: '1층 도서관 메인 문 옆 벽',   emoji: '📚', piece: '조각 1', pieceEmoji: '🌱', pieceLabel: '새싹' },
   { id: 2, name: '3학년 복도',     hint: '3-2반 교실 앞 게시판',      emoji: '🚪', piece: '조각 2', pieceEmoji: '🌿', pieceLabel: '잎사귀' },
   { id: 3, name: '학교 정원',      hint: '중앙 화단 벤치 앞',         emoji: '🌳', piece: '조각 3', pieceEmoji: '🍏', pieceLabel: '풋사과' },
-  { id: 4, name: '급식실 앞',      hint: '급식실 입구 공지 보드',      emoji: '🍽️', piece: '조각 4', pieceEmoji: '✨', pieceLabel: '빛나기' },
-  { id: 5, name: '도서관 내부',    hint: '신간 코너 책꽂이 사이',      emoji: '🔖', piece: '조각 5', pieceEmoji: '🏆', pieceLabel: '완성!' },
+  { id: 4, name: '급식실 앞',      hint: '급식실 입구 공지 보드',      emoji: '🍽️', piece: '조각 4', pieceEmoji: '🏆', pieceLabel: '완성!' },
 ];
 
-// ── 미니게임 링크 매핑 (임시) ─────────────────────
-// 어느 위치에서 어느 게임으로 보낼지 아직 확정 전이라 일단 조각1/3/5에
-// 랜덤 배정해둠. 순서 정해지면 이 매핑만 바꾸면 됨 — location id를
-// key로, 게임 경로를 value로.
+// ── 미니게임 링크 매핑 ────────────────────────────
+// 이제 4개 위치 전부 게임으로 연결됨 (예전엔 1,3,5만 게임이고 나머지는
+// 순수 스캔 위치였는데, 게임이 4개로 늘어서 5번 위치를 없애고
+// 1,2,3,4 전부 게임 launcher로 통일함).
 const GAME_LINKS = {
-  1: '/car/',           // 조각 1 (도서관 입구) → 풋 레이서
-  3: '/yabawi.html',     // 조각 3 (학교 정원)   → 야바위
-  5: '/dodge-books.html' // 조각 5 (도서관 내부) → 책피하기
+  1: '/car/',              // 조각 1 (도서관 입구) → 풋 레이서
+  2: '/yabawi.html',       // 조각 2 (3학년 복도)   → 야바위
+  3: '/dodge-books.html',  // 조각 3 (학교 정원)    → 책피하기
+  4: '/hidden-picture.html' // 조각 4 (급식실 앞)   → 숨은그림찾기
 };
 
 // ── 스토리지 키 ──────────────────────────────────
@@ -38,13 +38,12 @@ function getOrCreateCode() {
 }
 
 // ── 퍼즐 그리드 배치 ─────────────────────────────
-// 레이아웃: [크게1(span row2)] + [위2개] + [아래2개] → 1+2+2 = 5개
+// 4조각 2x2 균등 배치 (예전엔 5조각용 1+2+2 비대칭 배치였음)
 const LAYOUT = [
-  { id:1, style:'grid-column:1; grid-row:1/3;' },
+  { id:1, style:'grid-column:1; grid-row:1;' },
   { id:2, style:'grid-column:2; grid-row:1;' },
-  { id:3, style:'grid-column:3; grid-row:1;' },
+  { id:3, style:'grid-column:1; grid-row:2;' },
   { id:4, style:'grid-column:2; grid-row:2;' },
-  { id:5, style:'grid-column:3; grid-row:2;' },
 ];
 
 // ── 렌더 ─────────────────────────────────────────
@@ -103,9 +102,10 @@ function render(newlyFilledId = null) {
 
   // 프로그레스
   const cnt = collected.length;
-  document.getElementById('progress-text').innerHTML = `퍼즐 <strong>${cnt} / 5</strong>개 수집 완료`;
-  document.getElementById('progress-bar').style.width = (cnt / 5 * 100) + '%';
-  document.getElementById('count-badge').textContent = cnt + '/5';
+  const total = LOCATIONS.length;
+  document.getElementById('progress-text').innerHTML = `퍼즐 <strong>${cnt} / ${total}</strong>개 수집 완료`;
+  document.getElementById('progress-bar').style.width = (cnt / total * 100) + '%';
+  document.getElementById('count-badge').textContent = cnt + '/' + total;
 }
 
 // ── 수집 ─────────────────────────────────────────
@@ -122,7 +122,7 @@ function collect(id, e) {
   const loc = LOCATIONS.find(x => x.id === id);
   showToast(`🍏 ${loc.pieceLabel} 조각 획득!`);
 
-  if (collected.length === 5) {
+  if (collected.length === LOCATIONS.length) {
     setTimeout(() => showComplete(), 900);
   }
 }
@@ -189,7 +189,7 @@ function resetAll() {
 function checkUrlParam() {
   const params = new URLSearchParams(window.location.search);
   const piece = parseInt(params.get('piece'));
-  if (piece && piece >= 1 && piece <= 5) {
+  if (piece && piece >= 1 && piece <= LOCATIONS.length) {
     const collected = getCollected();
     if (!collected.includes(piece)) {
       setTimeout(() => {
