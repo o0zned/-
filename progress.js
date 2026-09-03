@@ -41,7 +41,8 @@ const SiteProgress = (function () {
     const GAME_DEFAULTS = {
         carGame: { completed: false, score: 0, bestScore: 0, coins: 0, bestDistance: 0, playCount: 0, lastPlayed: null },
         yabawi: { completed: false, bestStageReached: 0, playCount: 0, lastPlayed: null },
-        dodgeBooks: { completed: false, bestDodged: 0, playCount: 0, lastPlayed: null }
+        dodgeBooks: { completed: false, bestDodged: 0, playCount: 0, lastPlayed: null },
+        hiddenPicture: { completed: false, lastTimeMs: null, playCount: 0, lastPlayed: null }
     };
 
     function defaults() {

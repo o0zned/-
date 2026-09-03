@@ -296,6 +296,12 @@
         statBestScoreEl.textContent = saved.bestScore;
         statBestDistanceEl.textContent = saved.bestDistance + 'm';
 
+        // Finishing the run (not just crashing) collects this game's
+        // puzzle piece on the main site — reuses the site's existing
+        // ?piece=N handling in system.js, no extra plumbing needed.
+        const homeLinkEl = document.getElementById('home-link');
+        homeLinkEl.href = (reason === 'finished') ? '/?piece=1' : '/';
+
         overlayEl.classList.add('show');
     }
     function hideGameOverOverlay() {

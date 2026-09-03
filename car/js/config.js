@@ -57,8 +57,8 @@ const TERRAIN_CONFIG = {
     // previously-approved "end" difficulty (~0.7, ~35-37° observed)
     // now sits around the MIDDLE of the run instead of being the peak
     // — early sections get gentler, late sections get properly harder.
-    maxSlopeStart: 0.2,  // ~11°, easy warm-up
-    maxSlopeEnd: 1.05,   // ~46°, real late-game challenge
+    maxSlopeStart: 0.2,  // ~11°, 원래대로 복구 — 이번엔 차량 자체를 더 불안정하게
+    maxSlopeEnd: 1.05,   // ~46°, 원래대로 복구
 
     // Same idea for hill/pit intensity — small bumps early, bigger
     // drops/climbs later. Scaled up on the end side to match the wider
@@ -149,7 +149,11 @@ const CAR_CONFIG = {
     // mass: how much "stuff" the chassis has. Heavier = harder to
     // accelerate/decelerate (more inertia), and it presses into the
     // ground harder (more normal force -> more available friction/grip).
-    bodyMass: 6,
+    // mass: how much "stuff" the chassis has. Lowered from 6 — lighter
+    // means the SAME engine/brake force now produces more acceleration
+    // (F=ma), and it also reacts more to bumps/torque instead of
+    // plowing through them, which helps with the instability goal too.
+    bodyMass: 4,
 
     // Rotational inertia (a.k.a. moment of inertia): how much the
     // chassis "resists" being spun. Matter can compute this
@@ -158,18 +162,15 @@ const CAR_CONFIG = {
     // inertia means the car resists rotating (feels planted, harder to
     // flip), LOWER means it spins easily (feels twitchy, flips easily).
     // Matter's auto-derived value for this rectangle is roughly ~4000.
-    // Raised back up close to that: now that the wheelie-style offset
-    // force application point (see Car.applyEngineForce) is doing the
-    // actual work of inducing flips under hard acceleration, the car
-    // doesn't need to be globally twitchy/unstable too — that was
-    // causing random flipping/spinning from ordinary bumps instead of
-    // flips being a deliberate result of flooring it.
-    bodyInertia: 3200,
+    // Pushed lower again — terrain slope reverted to normal, so this
+    // time the instability has to carry the whole "too easy" fix by
+    // itself. Staying short of the ~1000 extreme that caused
+    // uncontrollable spinning earlier.
+    bodyInertia: 1900,
 
     // Center of mass offset from the chassis's geometric center, in px.
-    // {x:0, y:0} = perfectly centered. Pulled back close to centered —
-    // same reasoning as bodyInertia above.
-    centerOfMassOffset: { x: 0, y: -2 },
+    // Pushed further up again.
+    centerOfMassOffset: { x: 0, y: -8 },
 
     // --- Wheels ---
     wheelRadius: 15,
@@ -200,12 +201,10 @@ const CAR_CONFIG = {
     // position under load, absorbing bumps instead of transmitting
     // every terrain wrinkle straight into the chassis. Pulled back to a
     // more absorbing/stable value — same reasoning as bodyInertia above.
-    suspensionStiffness: 0.72,
-    // damping: how quickly any spring oscillation settles down. Higher
-    // = suspension stops bouncing sooner (feels stiffer/more damped).
-    // Raised back up so ordinary terrain bumps settle out instead of
-    // wobbling into an accidental flip.
-    suspensionDamping: 0.16,
+    suspensionStiffness: 0.9,
+    // damping: how quickly any spring oscillation settles down.
+    // Pushed lower again.
+    suspensionDamping: 0.06,
 
     // --- Driving forces (Phase 4: now actually wired up) ---
     // Which wheel(s) receive the accelerator's driving force. Switched
@@ -217,15 +216,16 @@ const CAR_CONFIG = {
     drivenWheels: 'rear', // 'front' | 'rear' | 'both'
 
     // engineForce: how hard the engine can push the car forward per
-    // frame while the accelerator is held. Raised again — still felt
-    // weak even with the rear-wheel torque offset.
-    engineForce: 0.013,
+    // frame while the accelerator is held. 0.017 (paired with the lower
+    // bodyMass) came out to ~2x the old acceleration — way too fast.
+    // Pulled back to land around ~1.4x instead.
+    engineForce: 0.012,
 
     // brakeForce: applied as a CONSTANT backward push every frame the
     // brake zone is held, regardless of current velocity sign (see
     // Car.applyBrakeForce). Matched to engineForce so accelerate/brake
     // feel like true mirror images of each other.
-    brakeForce: 0.013,
+    brakeForce: 0.012,
 
     // How far below the wheel's center the engine force is applied, as
     // a fraction of wheelRadius (1.0 = full radius = exactly at ground

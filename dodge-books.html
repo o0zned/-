@@ -59,8 +59,11 @@ body { height:100dvh; }
 <div class="canvas-wrap">
   <canvas id="game-canvas"></canvas>
   <div class="hud-top">
-    <div class="logo-badge">📚 책피하기</div>
-    <div class="progress-badge"><span id="progress-count">0</span> / 15</div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <a href="/" class="progress-badge" title="메인으로" style="text-decoration:none; padding:6px 10px;">🏠</a>
+      <div class="logo-badge">📚 책피하기</div>
+    </div>
+    <div class="progress-badge"><span id="progress-count">0</span> / 30</div>
   </div>
 </div>
 
@@ -73,7 +76,7 @@ body { height:100dvh; }
   <div class="overlay-card">
     <div class="overlay-emoji">📚</div>
     <div class="overlay-title">책피하기</div>
-    <p class="overlay-sub">오른쪽에서 날아오는 책 15개를<br>피하면 성공이에요!<br>손가락으로 위아래로 움직여서 피하세요.</p>
+    <p class="overlay-sub">오른쪽에서 날아오는 책 30개를<br>피하면 성공이에요!<br>손가락으로 위아래로 움직여서 피하세요.</p>
     <button class="overlay-btn" id="start-btn">시작하기</button>
     <a class="home-link" href="/">🏠 메인으로</a>
   </div>
@@ -85,6 +88,7 @@ body { height:100dvh; }
     <div class="overlay-title" id="result-title">성공!</div>
     <p class="overlay-sub" id="result-sub"></p>
     <button class="overlay-btn" id="result-btn">다시 하기</button>
+    <a class="home-link" id="home-link" href="/">🏠 메인으로</a>
   </div>
 </div>
 
@@ -94,16 +98,16 @@ const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 const progressEl = document.getElementById('progress-count');
 
-const GOAL = 15;
+const GOAL = 30;
 const CONFIG = {
   playerRadius: 22,
   playerX: 90,               // fixed x position near the left edge
   bookWidth: 46,
   bookHeight: 34,
-  // 난이도: 하, 속도는 좀 더 빠르게 조정
-  bookSpeedRange: [260, 360],   // px/sec, right-to-left (was 180-260)
-  spawnIntervalRange: [500, 800], // ms between spawns (was 700-1100)
-  hitboxShrink: 0.78            // slightly forgiving collision (visual size * this = hit size)
+  // 난이도를 한 단계 더 올림 — 개수도 늘었으니 속도/간격 다시 조여줌
+  bookSpeedRange: [300, 410],   // px/sec, right-to-left (was 260-360)
+  spawnIntervalRange: [420, 700], // ms between spawns (was 500-800)
+  hitboxShrink: 0.85            // was 0.78 — hit detection slightly less forgiving
 };
 
 let viewW = 0, viewH = 0;
@@ -228,6 +232,8 @@ function endGame(success) {
     title.textContent = '맞았어요!';
     sub.textContent = dodged + '개까지 피했어요. 다시 도전해보세요!';
   }
+  // Success collects this game's puzzle piece on the main site.
+  document.getElementById('home-link').href = success ? '/?piece=3' : '/';
   if (typeof SiteProgress !== 'undefined') {
     SiteProgress.recordRun('dodgeBooks', { completed: success, bestDodged: dodged });
   }

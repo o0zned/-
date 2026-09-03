@@ -26,10 +26,7 @@
     -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
 html, body { height:100%; overflow:hidden; overscroll-behavior:none; font-family:'Noto Sans KR',sans-serif; position:relative; }
 body {
-    /* ONE continuous gradient for the whole page — header and background
-       are no longer separate painted blocks, so there's no seam to line
-       up in the first place. */
-    background: linear-gradient(180deg, var(--green) 0%, #AEFF3C 14%, #EFFFD0 32%, var(--cream) 65%, var(--cream) 100%);
+    background: linear-gradient(180deg, #C8FF6E 0%, #F3FFD9 100%);
 }
 body::before {
     content:'';
@@ -41,48 +38,82 @@ body::before {
     pointer-events:none;
     z-index:0;
 }
-.app { position:relative; z-index:1; }
-.app { max-width:430px; margin:0 auto; min-height:100dvh; display:flex; flex-direction:column; position:relative; }
 
-.header { padding:20px 20px 30px; position:relative; }
-.header h1 { font-family:'Gaegu',cursive; font-size:26px; color:var(--green-deep); }
-.header .stage-label { font-size:12px; color:var(--brown); font-weight:700; margin-top:4px; }
+/* ---- Landscape, full-bleed layout (matches car/dodge-books games) ---- */
+.canvas-wrap { position:absolute; inset:0; touch-action:none; z-index:1; }
+#game-canvas { display:block; width:100%; height:100%; }
 
-.message-box { margin:16px 16px 0; background:white; border-radius:var(--radius-lg); padding:14px 16px; text-align:center; box-shadow:var(--shadow-sm); border:2px solid rgba(195,255,116,0.6); }
-.message-box p { font-family:'Gaegu',cursive; font-size:19px; color:var(--green-deep); font-weight:700; }
+.hud-top {
+    position:absolute; top:0; left:0; right:0; z-index:2;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:max(10px, env(safe-area-inset-top)) 16px 10px;
+    background:linear-gradient(180deg, rgba(250,255,240,0.9) 0%, rgba(250,255,240,0) 100%);
+    pointer-events:none;
+}
+.hud-top > * { pointer-events:auto; }
+.hud-left { display:flex; align-items:center; gap:8px; }
+.home-btn {
+    width:34px; height:34px; border-radius:50%;
+    background:white; display:flex; align-items:center; justify-content:center;
+    font-size:15px; text-decoration:none; box-shadow:var(--shadow-sm); flex-shrink:0;
+}
+.home-btn:active { transform:scale(0.92); }
+.title-badge { background:var(--green-deep); color:var(--green); font-family:'Gaegu',cursive; font-size:14px; font-weight:700; padding:5px 12px; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); }
+.stage-badge { background:white; color:var(--green-deep); font-family:'Gaegu',cursive; font-size:14px; font-weight:700; padding:5px 12px; border-radius:var(--radius-lg); box-shadow:var(--shadow-sm); }
 
-.stage-canvas-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:16px; }
-#game-canvas { width:100%; max-width:400px; touch-action:none; }
+.message-bar {
+    position:absolute; top:50px; left:50%; transform:translateX(-50%); z-index:2;
+    background:white; border-radius:var(--radius-lg); padding:8px 20px; text-align:center;
+    box-shadow:var(--shadow-sm); border:2px solid rgba(195,255,116,0.6); pointer-events:none;
+    white-space:nowrap;
+}
+.message-bar p { font-family:'Gaegu',cursive; font-size:16px; color:var(--green-deep); font-weight:700; }
 
-.tap-hint { text-align:center; font-size:12px; color:var(--brown-light); padding-bottom:10px; min-height:18px; }
+.tap-hint {
+    position:absolute; bottom:max(12px, env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); z-index:2;
+    font-size:12px; color:var(--brown-light); font-weight:700; text-align:center; min-height:16px; pointer-events:none;
+}
+
+.rotate-prompt { display:none; position:fixed; inset:0; z-index:2000; background:var(--cream); flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center; }
+.rotate-icon { font-size:48px; animation:rotateHint 1.6s ease-in-out infinite; }
+@keyframes rotateHint { 0%,100%{transform:rotate(0deg);} 50%{transform:rotate(-90deg);} }
+.rotate-prompt p { font-family:'Gaegu',cursive; font-size:20px; color:var(--green-deep); font-weight:700; }
+@media (orientation:portrait) { .rotate-prompt{display:flex;} .canvas-wrap, .hud-top, .message-bar, .tap-hint {display:none;} }
 
 .overlay { position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:24px; opacity:0; pointer-events:none; transition:opacity 0.35s; }
 .overlay.show { opacity:1; pointer-events:all; }
-.overlay-card { background:white; border-radius:var(--radius-xl); padding:30px 26px; width:100%; max-width:320px; text-align:center; box-shadow:var(--shadow-lg); position:relative; overflow:hidden; transform:scale(0.8) translateY(30px); transition:transform 0.45s cubic-bezier(.34,1.56,.64,1); }
+.overlay-card { background:white; border-radius:var(--radius-xl); padding:26px 24px; width:100%; max-width:300px; text-align:center; box-shadow:var(--shadow-lg); position:relative; overflow:hidden; transform:scale(0.8) translateY(30px); transition:transform 0.45s cubic-bezier(.34,1.56,.64,1); }
 .overlay.show .overlay-card { transform:scale(1) translateY(0); }
 .overlay-card::before { content:''; position:absolute; top:0; left:0; right:0; height:8px; background:linear-gradient(90deg, var(--green), var(--green-mid), var(--green)); }
-.overlay-emoji { font-size:44px; margin-bottom:8px; }
-.overlay-title { font-family:'Gaegu',cursive; font-size:26px; font-weight:700; color:var(--green-deep); margin-bottom:8px; }
-.overlay-sub { font-size:13px; color:var(--brown-light); line-height:1.6; margin-bottom:22px; }
-.overlay-btn { width:100%; padding:14px; border:none; border-radius:var(--radius-md); background:var(--green-deep); color:var(--green); font-size:15px; font-weight:700; font-family:'Noto Sans KR',sans-serif; cursor:pointer; }
+.overlay-emoji { font-size:40px; margin-bottom:8px; }
+.overlay-title { font-family:'Gaegu',cursive; font-size:24px; font-weight:700; color:var(--green-deep); margin-bottom:8px; }
+.overlay-sub { font-size:13px; color:var(--brown-light); line-height:1.6; margin-bottom:20px; }
+.overlay-btn { width:100%; padding:13px; border:none; border-radius:var(--radius-md); background:var(--green-deep); color:var(--green); font-size:15px; font-weight:700; font-family:'Noto Sans KR',sans-serif; cursor:pointer; }
 .overlay-btn:active { transform:scale(0.97); }
-.home-link { display:block; margin-top:12px; font-size:12px; font-weight:700; color:var(--brown-light); text-decoration:none; padding:6px; }
+.home-link { display:block; margin-top:10px; font-size:12px; font-weight:700; color:var(--brown-light); text-decoration:none; padding:6px; }
 .home-link:active { opacity:0.6; }
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="header">
-    <h1>🥤 야바위</h1>
-    <div class="stage-label" id="stage-label">스테이지 1 / 3</div>
-  </div>
 
-  <div class="message-box"><p id="message">시작 버튼을 눌러주세요</p></div>
+<div class="canvas-wrap">
+  <canvas id="game-canvas"></canvas>
+</div>
 
-  <div class="stage-canvas-wrap">
-    <canvas id="game-canvas"></canvas>
+<div class="hud-top">
+  <div class="hud-left">
+    <a href="/" class="home-btn" title="메인으로">🏠</a>
+    <div class="title-badge">🥤 야바위</div>
   </div>
-  <div class="tap-hint" id="tap-hint"></div>
+  <div class="stage-badge" id="stage-label">스테이지 1 / 3</div>
+</div>
+
+<div class="message-bar"><p id="message">시작 버튼을 눌러주세요</p></div>
+<div class="tap-hint" id="tap-hint"></div>
+
+<div class="rotate-prompt">
+  <div class="rotate-icon">🔄</div>
+  <p>화면을 가로로 돌려주세요</p>
 </div>
 
 <div class="overlay show" id="title-overlay">
@@ -101,6 +132,7 @@ body::before {
     <div class="overlay-title" id="result-title">정답!</div>
     <p class="overlay-sub" id="result-sub"></p>
     <button class="overlay-btn" id="result-btn">다음</button>
+    <a class="home-link" id="home-link" href="/">🏠 메인으로</a>
   </div>
 </div>
 
@@ -131,31 +163,42 @@ const tapHintEl = document.getElementById('tap-hint');
 
 let stageIndex = 0;
 let cups = [];          // { slot, x, targetX, correct, lifted, liftAmount }
-let canvasW = 400, canvasH = 260;
+let canvasW = 800, canvasH = 400;
 let inputEnabled = false;
-let animating = false;
 
 function resizeCanvas() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const rect = canvas.parentElement.getBoundingClientRect();
-  canvasW = Math.min(rect.width, 400);
-  canvasH = Math.max(220, Math.min(rect.height, 300));
+  canvasW = rect.width;
+  canvasH = rect.height;
   canvas.width = Math.round(canvasW * dpr);
   canvas.height = Math.round(canvasH * dpr);
   canvas.style.width = canvasW + 'px';
   canvas.style.height = canvasH + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // cup x positions depend on canvasW, so refresh them on resize/rotate
+  if (cups.length > 0) {
+    const stage = STAGES[stageIndex];
+    cups.forEach((cup, i) => {
+      const x = slotX(i, stage.cupCount);
+      cup.x = x; cup.targetX = x;
+    });
+  }
 }
 window.addEventListener('resize', resizeCanvas);
+window.addEventListener('orientationchange', resizeCanvas);
 
 function lerp(a, b, t) { return a + (b - a) * t; }
 function rand(min, max) { return min + Math.random() * (max - min); }
 function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
 
 function slotX(slot, count) {
-  const margin = 40;
-  const usable = canvasW - margin * 2;
-  return margin + (usable * (slot + 0.5)) / count;
+  // Landscape gives much more horizontal room — keep cups comfortably
+  // spaced but centered rather than stretched edge-to-edge.
+  const maxWidth = Math.min(canvasW - 80, 620);
+  const startX = (canvasW - maxWidth) / 2 + 40;
+  const usable = maxWidth - 80;
+  return startX + (usable * (slot + 0.5)) / count;
 }
 
 function setupStage() {
@@ -231,8 +274,8 @@ function render() {
   ctx.strokeStyle = 'rgba(61,107,0,0.15)';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(20, groundY);
-  ctx.lineTo(canvasW - 20, groundY);
+  ctx.moveTo(canvasW * 0.1, groundY);
+  ctx.lineTo(canvasW * 0.9, groundY);
   ctx.stroke();
 
   for (const cup of cups) {
@@ -331,6 +374,7 @@ function showResult(success) {
   const title = document.getElementById('result-title');
   const sub = document.getElementById('result-sub');
   const btn = document.getElementById('result-btn');
+  document.getElementById('home-link').href = '/'; // reset; only the final-clear branch below overrides this
 
   if (success && stageIndex < STAGES.length - 1) {
     emoji.textContent = '🎉';
@@ -347,6 +391,8 @@ function showResult(success) {
     sub.textContent = '3스테이지를 모두 성공했어요!';
     btn.textContent = '처음부터 다시';
     btn.onclick = () => { overlay.classList.remove('show'); stageIndex = 0; startStage(); };
+    // Final-stage clear collects this game's puzzle piece on the main site.
+    document.getElementById('home-link').href = '/?piece=2';
     if (typeof SiteProgress !== 'undefined') {
       SiteProgress.recordRun('yabawi', { completed: true, bestStageReached: STAGES.length });
     }

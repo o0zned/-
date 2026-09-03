@@ -24,6 +24,7 @@
         </div>
       </div>
       <div class="hud-right">
+        <a href="/" class="hud-icon-btn" title="메인으로" style="text-decoration:none;">🏠</a>
         <button id="debug-btn" class="hud-icon-btn" title="디버그">🐞</button>
         <button id="regen-btn" class="hud-icon-btn" title="새 지형">🎲</button>
       </div>
@@ -59,11 +60,11 @@
         <div class="stat-row stat-row-best"><span>🏆 최고 거리</span><span id="stat-best-distance">0m</span></div>
       </div>
       <button class="restart-btn" id="restart-btn">다시 하기 🔄</button>
-      <a class="home-link" href="/">🏠 메인으로</a>
+      <a class="home-link" id="home-link" href="/">🏠 메인으로</a>
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js" crossorigin="anonymous"></script>
   <script src="/progress.js"></script>
   <script src="js/config.js"></script>
   <script src="js/save.js"></script>
