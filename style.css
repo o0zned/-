@@ -523,6 +523,18 @@
     100% { transform: translate(var(--tx), var(--ty)) scale(0.3) rotate(var(--tr)); opacity: 0; }
   }
 
+  .reset-link-wrap {
+    text-align: center;
+    margin-top: 28px;
+  }
+  .reset-link {
+    font-size: 12px;
+    color: var(--brown-light);
+    opacity: 0.5;
+    text-decoration: none;
+  }
+  .reset-link:active { opacity: 0.8; }
+
   .bottom-pad { height: 48px; }
 
   .toast {
