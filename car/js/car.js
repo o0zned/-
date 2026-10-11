@@ -15,6 +15,18 @@ let wheelImgReady = false;
 wheelImg.onload = () => { wheelImgReady = true; };
 wheelImg.src = '/assets/car/wheel.png';
 
+// 차체 이미지 — 친구가 그려서 /assets/car/body.png로 올리면 자동으로 적용됨.
+// 아직 파일이 없거나 로딩 전이면 onerror로 걸러서 기존 placeholder(크림색
+// 둥근 사각형)가 그대로 나옴. 물리(섀시 크기/질량)는 전혀 안 건드림 —
+// 그림만 bodyWidth x bodyHeight 크기에 맞춰서 그 자리에 그려짐.
+// ※ 친구한테: 그릴 때 86x28 비율(가로로 넓고 낮은 형태)로 맞춰서 그려야
+//   차체 모양이랑 실제 충돌 판정 박스가 어긋나지 않음.
+const bodyImg = new Image();
+let bodyImgReady = false;
+bodyImg.onload = () => { bodyImgReady = true; };
+bodyImg.onerror = () => { bodyImgReady = false; };
+bodyImg.src = '/assets/car/body.png';
+
 class Car {
     constructor(world, x, y) {
         const cfg = CAR_CONFIG;
@@ -147,29 +159,37 @@ class Car {
     _renderChassis(ctx, cameraX) {
         const cfg = CAR_CONFIG;
         const p = this.chassis.position;
-        if (typeof ctx.roundRect !== 'function') {
-            ctx.roundRect = function (x, y, w, h, r) {
-                this.beginPath();
-                this.moveTo(x + r, y);
-                this.arcTo(x + w, y, x + w, y + h, r);
-                this.arcTo(x + w, y + h, x, y + h, r);
-                this.arcTo(x, y + h, x, y, r);
-                this.arcTo(x, y, x + w, y, r);
-                this.closePath();
-            };
-        }
+        const w = cfg.bodyWidth, h = cfg.bodyHeight;
+
         ctx.save();
         ctx.translate(p.x - cameraX, p.y);
         ctx.rotate(this.chassis.angle);
-        ctx.fillStyle = '#FAFFF0';   // --cream
-        ctx.strokeStyle = '#3D6B00'; // --green-deep
-        ctx.lineWidth = 3;
-        const w = cfg.bodyWidth, h = cfg.bodyHeight;
-        const r = 6;
-        ctx.beginPath();
-        ctx.roundRect(-w / 2, -h / 2, w, h, r);
-        ctx.fill();
-        ctx.stroke();
+
+        if (bodyImgReady && bodyImg.naturalWidth) {
+            // 실제 차체 아트 — 물리 박스(w x h)에 꽉 맞춰서 중앙 기준으로 그림.
+            ctx.drawImage(bodyImg, -w / 2, -h / 2, w, h);
+        } else {
+            // 친구가 그린 body.png가 아직 없거나 로딩 전 — placeholder.
+            if (typeof ctx.roundRect !== 'function') {
+                ctx.roundRect = function (x, y, w, h, r) {
+                    this.beginPath();
+                    this.moveTo(x + r, y);
+                    this.arcTo(x + w, y, x + w, y + h, r);
+                    this.arcTo(x + w, y + h, x, y + h, r);
+                    this.arcTo(x, y + h, x, y, r);
+                    this.arcTo(x, y, x + w, y, r);
+                    this.closePath();
+                };
+            }
+            ctx.fillStyle = '#FAFFF0';   // --cream
+            ctx.strokeStyle = '#3D6B00'; // --green-deep
+            ctx.lineWidth = 3;
+            const r = 6;
+            ctx.beginPath();
+            ctx.roundRect(-w / 2, -h / 2, w, h, r);
+            ctx.fill();
+            ctx.stroke();
+        }
         ctx.restore();
     }
 
