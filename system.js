@@ -1,8 +1,8 @@
 // ── 데이터 ──────────────────────────────────────
 const LOCATIONS = [
-  { id: 1, name: '도서관',    hint: '풋활동한다',      emoji: '📚', piece: '첫 번째 조각', pieceEmoji: '🏎️', pieceLabel: '미래의 F1 드라이버',   stampImg: '/assets/puzzle/stamp1.png' },
+  { id: 1, name: '도서관',    hint: '풋활동한다',      emoji: '📚', piece: '첫 번째 조각', pieceEmoji: '🏎️', pieceLabel: '미래 F1 드라이버',   stampImg: '/assets/puzzle/stamp1.png' },
   { id: 2, name: '창의융합실',     hint: '쏘놀이들활동한다',      emoji: '👾', piece: '두 번째 조각', pieceEmoji: '🥤', pieceLabel: '속임수의 달인', stampImg: '/assets/puzzle/stamp2.png' },
-  { id: 3, name: '중앙현관',      hint: '해랑본관의꽃',         emoji: '🚪', piece: '세 번째 조각', pieceEmoji: '📚', pieceLabel: '책 많이 읽읍시다', stampImg: '/assets/puzzle/stamp3.png' },
+  { id: 3, name: '중앙현관',      hint: '해랑본관의꽃',         emoji: '🚪', piece: '세 번째 조각', pieceEmoji: '📚', pieceLabel: '책 많이 읽자', stampImg: '/assets/puzzle/stamp3.png' },
   { id: 4, name: '가사실',      hint: '배고프지않나요',      emoji: '🍳', piece: '네 번째 조각', pieceEmoji: '🧩', pieceLabel: '끝!',  stampImg: '/assets/puzzle/stamp4.png' },
 ];
 
