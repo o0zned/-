@@ -29,10 +29,12 @@ function saveCollected(arr) {
 }
 // 완료 순서대로 1, 2, 3, 4... 발급되는 번호.
 // 정적 사이트라 서버 DB가 없어서, 모두의 기기가 같은 숫자를 함께 올리는
-// 공용 카운터(CountAPI, 가입 없이 쓰는 무료 서비스)를 하나 둬서 거기서
-// "다음 번호"를 받아온다. 네트워크가 막혀있거나 CountAPI가 다운됐을 때를
-// 대비해, 실패하면 그냥 랜덤 4자리 숫자로 대신 발급한다(이 경우는 순서가
-// 보장되지 않음 — 드문 경우라 큰 문제는 안 됨).
+// 공용 카운터를 하나 둬서 거기서 "다음 번호"를 받아온다.
+// (원래 쓰던 CountAPI(api.countapi.xyz)는 서비스가 죽어서 매번 실패하고
+// 있었음 — 같은 방식의 대체 서비스(abacus, jasoncameron.dev)로 교체함.
+// 이것도 네트워크가 막혀있거나 다운됐을 때를 대비해, 실패하면 그냥 랜덤
+// 4자리 숫자로 대신 발급한다(이 경우는 순서가 보장되지 않음 — 드문
+// 경우라 큰 문제는 안 됨).
 const COUNTER_NAMESPACE = 'hrsxnlxbook-poot-puzzle-2026';
 const COUNTER_KEY = 'complete-code';
 
@@ -41,7 +43,7 @@ async function getOrCreateCode() {
   if (c) return c;
 
   try {
-    const res = await fetch(`https://api.countapi.xyz/hit/${COUNTER_NAMESPACE}/${COUNTER_KEY}`);
+    const res = await fetch(`https://abacus.jasoncameron.dev/hit/${COUNTER_NAMESPACE}/${COUNTER_KEY}`);
     const data = await res.json();
     if (data && typeof data.value === 'number') {
       c = String(data.value);
