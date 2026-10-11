@@ -17,13 +17,20 @@ wheelImg.src = '/assets/car/wheel.png';
 
 // 차체 이미지 — 친구가 그려서 /assets/car/body.png로 올리면 자동으로 적용됨.
 // 아직 파일이 없거나 로딩 전이면 onerror로 걸러서 기존 placeholder(크림색
-// 둥근 사각형)가 그대로 나옴. 물리(섀시 크기/질량)는 전혀 안 건드림 —
-// 그림만 bodyWidth x bodyHeight 크기에 맞춰서 그 자리에 그려짐.
-// ※ 친구한테: 그릴 때 86x28 비율(가로로 넓고 낮은 형태)로 맞춰서 그려야
-//   차체 모양이랑 실제 충돌 판정 박스가 어긋나지 않음.
+// 둥근 사각형)가 그대로 나옴. 물리(섀시 크기/질량)는 전혀 안 건드림.
+//
+// 그림은 물리 박스(86x28) 크기에 억지로 꽉 채워 늘리지 않고, 원본
+// 비율을 그대로 유지한 채 가로폭만 bodyWidth에 맞추고 높이는 비율대로
+// 자동 계산해서 그림 — 그래서 친구가 어떤 비율로 그려오든 찌부러지지
+// 않음. 세로로 더 긴 그림이면 물리 박스보다 위아래로 살짝 더 크게
+// 보이는 것뿐이고, 충돌 판정(물리)에는 영향 없음.
 const bodyImg = new Image();
 let bodyImgReady = false;
-bodyImg.onload = () => { bodyImgReady = true; };
+let bodyImgAspect = 1; // naturalHeight / naturalWidth
+bodyImg.onload = () => {
+    bodyImgAspect = bodyImg.naturalHeight / bodyImg.naturalWidth;
+    bodyImgReady = true;
+};
 bodyImg.onerror = () => { bodyImgReady = false; };
 bodyImg.src = '/assets/car/body.png';
 
@@ -166,8 +173,10 @@ class Car {
         ctx.rotate(this.chassis.angle);
 
         if (bodyImgReady && bodyImg.naturalWidth) {
-            // 실제 차체 아트 — 물리 박스(w x h)에 꽉 맞춰서 중앙 기준으로 그림.
-            ctx.drawImage(bodyImg, -w / 2, -h / 2, w, h);
+            // 실제 차체 아트 — 가로폭은 물리 박스(w)에 맞추고, 높이는 원본
+            // 비율대로 자동 계산해서 찌부러지지 않게 그림. 중앙 기준.
+            const drawH = w * bodyImgAspect;
+            ctx.drawImage(bodyImg, -w / 2, -drawH / 2, w, drawH);
         } else {
             // 친구가 그린 body.png가 아직 없거나 로딩 전 — placeholder.
             if (typeof ctx.roundRect !== 'function') {
