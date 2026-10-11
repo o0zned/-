@@ -1,9 +1,9 @@
 // ── 데이터 ──────────────────────────────────────
 const LOCATIONS = [
-  { id: 1, name: '도서관 입구',    hint: '1층 도서관 메인 문 옆 벽',   emoji: '📚', piece: '조각 1', pieceEmoji: '🌱', pieceLabel: '새싹',   stampImg: '/assets/puzzle/stamp1.png' },
-  { id: 2, name: '3학년 복도',     hint: '3-2반 교실 앞 게시판',      emoji: '🚪', piece: '조각 2', pieceEmoji: '🌿', pieceLabel: '잎사귀', stampImg: '/assets/puzzle/stamp2.png' },
-  { id: 3, name: '학교 정원',      hint: '중앙 화단 벤치 앞',         emoji: '🌳', piece: '조각 3', pieceEmoji: '🍏', pieceLabel: '풋사과', stampImg: '/assets/puzzle/stamp3.png' },
-  { id: 4, name: '급식실 앞',      hint: '급식실 입구 공지 보드',      emoji: '🍽️', piece: '조각 4', pieceEmoji: '🏆', pieceLabel: '완성!',  stampImg: '/assets/puzzle/stamp4.png' },
+  { id: 1, name: '창의융합실',    hint: '쏘놀들이 동아리 활동하는 곳이에요' emoji: '👾', piece: '조각 1', pieceEmoji: '🌱', pieceLabel: '새싹',   stampImg: '/assets/puzzle/stamp1.png' },
+  { id: 2, name: '중앙현관',     hint: '본관을 수호하는 마스코트들을 만나봐요',      emoji: '🚪', piece: '조각 2', pieceEmoji: '🌿', pieceLabel: '잎사귀', stampImg: '/assets/puzzle/stamp2.png' },
+  { id: 3, name: '가사실',      hint: '걸어가기 힘들죠? 조금만 더 파이팅!',         emoji: '🍳', piece: '조각 3', pieceEmoji: '🍏', pieceLabel: '풋사과', stampImg: '/assets/puzzle/stamp3.png' },
+  { id: 4, name: '도서관',      hint: '친구들이 드디어 집으로 돌아왔어요',      emoji: '📚', piece: '조각 4', pieceEmoji: '🏆', pieceLabel: '완성!',  stampImg: '/assets/puzzle/stamp4.png' },
 ];
 
 // ── 미니게임 링크 매핑 ────────────────────────────
