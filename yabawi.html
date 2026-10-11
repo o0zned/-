@@ -39,7 +39,6 @@ body::before {
     z-index:0;
 }
 
-/* ---- Landscape, full-bleed layout (matches car/dodge-books games) ---- */
 .canvas-wrap { position:absolute; inset:0; touch-action:none; z-index:1; }
 #game-canvas { display:block; width:100%; height:100%; }
 
@@ -138,13 +137,7 @@ body::before {
 
 <script src="/progress.js"></script>
 <script>
-// ---------------------------------------------------------------------
-// ASSET SLOTS — now wired to the real illustrations the artist drew.
-// Images are loaded once up front (preloadImages) and drawn with
-// ctx.drawImage inside drawCharacter()/drawCup() below, preserving each
-// image's real aspect ratio instead of the old emoji-in-a-circle
-// placeholder.
-// ---------------------------------------------------------------------
+
 const CHARACTERS = {
   cheongfoot: { label: '청풋', img: 'char1', imgRatio: 318 / 360 }, // headband+tie character
   cheongmu:   { label: '청무', img: 'char2', imgRatio: 360 / 331 }  // waving character
@@ -195,7 +188,6 @@ function resizeCanvas() {
   canvas.style.width = canvasW + 'px';
   canvas.style.height = canvasH + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  // cup x positions depend on canvasW, so refresh them on resize/rotate
   if (cups.length > 0) {
     const stage = STAGES[stageIndex];
     cups.forEach((cup, i) => {
@@ -212,8 +204,6 @@ function rand(min, max) { return min + Math.random() * (max - min); }
 function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
 
 function slotX(slot, count) {
-  // Landscape gives much more horizontal room — keep cups comfortably
-  // spaced but centered rather than stretched edge-to-edge.
   const maxWidth = Math.min(canvasW - 80, 620);
   const startX = (canvasW - maxWidth) / 2 + 40;
   const usable = maxWidth - 80;
@@ -239,10 +229,8 @@ function drawCharacter(x, y, characterKey, scale = 1) {
   ctx.save();
   ctx.translate(x, y);
   if (assetsReady && img && img.naturalWidth) {
-    // Drawn with its feet near (0,0) — same anchor the old circle used.
     ctx.drawImage(img, -w / 2, -h, w, h);
   } else {
-    // Fallback while images are still loading.
     ctx.fillStyle = '#8BCC2A';
     ctx.beginPath();
     ctx.arc(0, -h / 2, 24 * scale, 0, Math.PI * 2);
@@ -255,13 +243,13 @@ function drawCharacter(x, y, characterKey, scale = 1) {
   ctx.restore();
 }
 
-const CUP_IMG_RATIO = 349 / 360; // real cup.png aspect (w/h)
+const CUP_IMG_RATIO = 349 / 360; 
 
 function drawCup(cup) {
   const baseY = canvasH * 0.62;
-  const liftY = cup.lifted * 46; // how far the cup slides up to reveal
+  const liftY = cup.lifted * 46; 
   const bottomY = baseY - liftY;
-  const cupH = 92;                       // drawn height of the cup art
+  const cupH = 92;                       
   const cupW = cupH * CUP_IMG_RATIO;
   const img = assetImages.cup;
 
@@ -270,7 +258,6 @@ function drawCup(cup) {
   if (assetsReady && img && img.naturalWidth) {
     ctx.drawImage(img, cup.x - cupW / 2, bottomY - cupH, cupW, cupH);
   } else {
-    // Fallback while images are still loading.
     ctx.fillStyle = '#E8F5D0';
     ctx.fillRect(cup.x - cupW / 2, bottomY - cupH, cupW, cupH);
   }
@@ -301,7 +288,7 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-// ---- Reveal -> Shuffle -> Guess flow ----
+
 function startStage() {
   setupStage();
   inputEnabled = false;
