@@ -10,6 +10,11 @@
  * -----------------------------------------------------------------------
  */
 
+const wheelImg = new Image();
+let wheelImgReady = false;
+wheelImg.onload = () => { wheelImgReady = true; };
+wheelImg.src = '/assets/car/wheel.png';
+
 class Car {
     constructor(world, x, y) {
         const cfg = CAR_CONFIG;
@@ -173,17 +178,24 @@ class Car {
         ctx.save();
         ctx.translate(p.x - cameraX, p.y);
         ctx.rotate(wheel.angle);
-        ctx.fillStyle = '#4A3728'; // --brown
-        ctx.beginPath();
-        ctx.arc(0, 0, CAR_CONFIG.wheelRadius, 0, Math.PI * 2);
-        ctx.fill();
-        // Spoke line so wheel rotation is visually readable.
-        ctx.strokeStyle = '#BFF366'; // --green
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(CAR_CONFIG.wheelRadius, 0);
-        ctx.stroke();
+        const d = CAR_CONFIG.wheelRadius * 2;
+        if (wheelImgReady && wheelImg.naturalWidth) {
+            // Real tire art — its own tread pattern reads the spin, so no
+            // extra spoke line is drawn on top.
+            ctx.drawImage(wheelImg, -d / 2, -d / 2, d, d);
+        } else {
+            // Fallback while the image is still loading.
+            ctx.fillStyle = '#4A3728'; // --brown
+            ctx.beginPath();
+            ctx.arc(0, 0, CAR_CONFIG.wheelRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#BFF366'; // --green
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(CAR_CONFIG.wheelRadius, 0);
+            ctx.stroke();
+        }
         ctx.restore();
     }
 

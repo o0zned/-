@@ -8,6 +8,11 @@
  * -----------------------------------------------------------------------
  */
 
+const coinImg = new Image();
+let coinImgReady = false;
+coinImg.onload = () => { coinImgReady = true; };
+coinImg.src = '/assets/car/coin.png';
+
 class Coins {
     constructor(terrain, seed) {
         this.list = this._generate(terrain, seed);
@@ -72,18 +77,19 @@ class Coins {
 
             ctx.save();
             ctx.translate(screenX, coin.y + bob);
-            ctx.fillStyle = '#F4C542'; // warm gold, distinct from the green palette so coins pop
-            ctx.strokeStyle = '#B8860B';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(0, 0, cfg.radius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-            ctx.fillStyle = '#FFE9A8';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('★', 0, 0);
+            if (coinImgReady && coinImg.naturalWidth) {
+                const d = cfg.radius * 2;
+                ctx.drawImage(coinImg, -d / 2, -d / 2, d, d);
+            } else {
+                // Fallback while the image is still loading.
+                ctx.fillStyle = '#F4C542';
+                ctx.strokeStyle = '#B8860B';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(0, 0, cfg.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
             ctx.restore();
         }
     }
