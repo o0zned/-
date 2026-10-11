@@ -217,6 +217,12 @@
     padding: 8px;
   }
   .piece-emoji { font-size: clamp(20px, 5vw, 36px); }
+  .piece-stamp {
+    width: clamp(44px, 14vw, 72px);
+    height: clamp(44px, 14vw, 72px);
+    border-radius: 50%;
+    object-fit: cover;
+  }
   .piece-num {
     font-size: 10px;
     font-weight: 700;
