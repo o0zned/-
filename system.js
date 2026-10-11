@@ -1,9 +1,9 @@
 // ── 데이터 ──────────────────────────────────────
 const LOCATIONS = [
-  { id: 1, name: '창의융합실',    hint: '쏘놀 동아리실!', emoji: '👾', piece: '첫 번째 조각', pieceEmoji: '🏎️', pieceLabel: '미래의 F1 드라이버',   stampImg: '/assets/puzzle/stamp1.png' },
-  { id: 2, name: '중앙현관',     hint: '책상에 올라와 있어요',      emoji: '🚪', piece: '두 번째 조각', pieceEmoji: '🥤', pieceLabel: '눈썰미 좋으신데요?', stampImg: '/assets/puzzle/stamp2.png' },
-  { id: 3, name: '가사실',      hint: '안 쪽까지 들어가 봐요',         emoji: '🍳', piece: '세 번째 조각', pieceEmoji: '📚', pieceLabel: '책 많이 읽으면 봐준대요', stampImg: '/assets/puzzle/stamp3.png' },
-  { id: 4, name: '도서관',      hint: '드디어 집으로 돌아왔다!',      emoji: '📚', piece: '네 번째 조각', pieceEmoji: '🧩', pieceLabel: '고생하셨어요!',  stampImg: '/assets/puzzle/stamp4.png' },
+  { id: 1, name: '창의융합실',    hint: '쏘놀들이 동아리 활동하는 곳이에요',      emoji: '👾', piece: '조각 1', pieceEmoji: '🌱', pieceLabel: '새싹',   stampImg: '/assets/puzzle/stamp1.png' },
+  { id: 2, name: '중앙현관',     hint: '본관을 수호하는 마스코트들을 만나봐요',      emoji: '🚪', piece: '조각 2', pieceEmoji: '🌿', pieceLabel: '잎사귀', stampImg: '/assets/puzzle/stamp2.png' },
+  { id: 3, name: '가사실',      hint: '걸어가기 힘들죠? 조금만 더 파이팅!',         emoji: '🍳', piece: '조각 3', pieceEmoji: '🍏', pieceLabel: '풋사과', stampImg: '/assets/puzzle/stamp3.png' },
+  { id: 4, name: '도서관',      hint: '친구들이 드디어 집으로 돌아왔어요',      emoji: '📚', piece: '조각 4', pieceEmoji: '🏆', pieceLabel: '완성!',  stampImg: '/assets/puzzle/stamp4.png' },
 ];
 
 // ── 미니게임 링크 매핑 ────────────────────────────
@@ -27,13 +27,33 @@ function getCollected() {
 function saveCollected(arr) {
   localStorage.setItem(KEY_COLLECTED, JSON.stringify(arr));
 }
-function getOrCreateCode() {
+// 완료 순서대로 1, 2, 3, 4... 발급되는 번호.
+// 정적 사이트라 서버 DB가 없어서, 모두의 기기가 같은 숫자를 함께 올리는
+// 공용 카운터(CountAPI, 가입 없이 쓰는 무료 서비스)를 하나 둬서 거기서
+// "다음 번호"를 받아온다. 네트워크가 막혀있거나 CountAPI가 다운됐을 때를
+// 대비해, 실패하면 그냥 랜덤 4자리 숫자로 대신 발급한다(이 경우는 순서가
+// 보장되지 않음 — 드문 경우라 큰 문제는 안 됨).
+const COUNTER_NAMESPACE = 'hrsxnlxbook-poot-puzzle-2026';
+const COUNTER_KEY = 'complete-code';
+
+async function getOrCreateCode() {
   let c = localStorage.getItem(KEY_CODE);
-  if (!c) {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    c = 'FOT-' + Array.from({length:6}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
-    localStorage.setItem(KEY_CODE, c);
+  if (c) return c;
+
+  try {
+    const res = await fetch(`https://api.countapi.xyz/hit/${COUNTER_NAMESPACE}/${COUNTER_KEY}`);
+    const data = await res.json();
+    if (data && typeof data.value === 'number') {
+      c = String(data.value);
+    }
+  } catch (e) {
+    // 네트워크 실패 — 아래 폴백으로 넘어감
   }
+
+  if (!c) {
+    c = String(Math.floor(1000 + Math.random() * 9000)); // 폴백: 랜덤 4자리
+  }
+  localStorage.setItem(KEY_CODE, c);
   return c;
 }
 
@@ -75,20 +95,18 @@ function render(newlyFilledId = null) {
   list.innerHTML = '';
   LOCATIONS.forEach(loc => {
     const done = collected.includes(loc.id);
-    const gameLink = GAME_LINKS[loc.id]; // undefined면 게임 연결 없는 위치
 
     const card = document.createElement('div');
     card.className = 'location-card' + (done ? ' done' : '');
 
+    // 실제 운영용 — 데모용 바로가기 링크/가짜 스캔 버튼 제거.
+    // 현장에 붙은 진짜 QR코드를 카메라로 스캔해야만 게임으로 이동하고,
+    // 피스는 게임을 클리어했을 때(?piece=N 리다이렉트)만 수집됨.
     let actionHtml;
-    if (gameLink) {
-      // 게임이 연결된 위치: QR스캐너 대신 바로 게임 페이지로 이동하는 링크.
-      // scan-btn과 동일한 스타일이라 버튼처럼 보이지만 실제로는 <a> 태그.
-      actionHtml = `<a class="scan-btn" href="${gameLink}" style="text-decoration:none;">🎮 이동</a>`;
-    } else if (done) {
+    if (done) {
       actionHtml = '<button class="scan-btn scanned" disabled>완료 ✓</button>';
     } else {
-      actionHtml = `<button class="scan-btn" onclick="collect(${loc.id}, event)">📷 스캔</button>`;
+      actionHtml = `<a class="scan-btn" href="/qr-scan.html" style="text-decoration:none;">📷 스캔</a>`;
     }
 
     card.innerHTML = `
@@ -147,10 +165,12 @@ function spawnParticles(e) {
 }
 
 // ── 완료 화면 ────────────────────────────────────
-function showComplete() {
-  document.getElementById('complete-code').textContent = getOrCreateCode();
+async function showComplete() {
+  const codeEl = document.getElementById('complete-code');
+  codeEl.textContent = '...'; // 번호 받아오는 동안 잠깐 표시
   const ov = document.getElementById('complete-overlay');
   ov.classList.add('show');
+  codeEl.textContent = await getOrCreateCode();
   // 완료 파티클 폭발
   for (let i = 0; i < 20; i++) {
     setTimeout(() => {
