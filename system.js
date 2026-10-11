@@ -1,9 +1,9 @@
 // ── 데이터 ──────────────────────────────────────
 const LOCATIONS = [
-  { id: 1, name: '창의융합실',    hint: '쏘놀 동아리실!', emoji: '👾', piece: '조각 1', pieceEmoji: '🌱', pieceLabel: '새싹',   stampImg: '/assets/puzzle/stamp1.png' },
-  { id: 2, name: '중앙현관',     hint: '책상에 올라와 있어요',      emoji: '🚪', piece: '조각 2', pieceEmoji: '🌿', pieceLabel: '잎사귀', stampImg: '/assets/puzzle/stamp2.png' },
-  { id: 3, name: '가사실',      hint: '안 쪽까지 들어가 봐요',         emoji: '🍳', piece: '조각 3', pieceEmoji: '🍏', pieceLabel: '풋사과', stampImg: '/assets/puzzle/stamp3.png' },
-  { id: 4, name: '도서관',      hint: '드디어 집으로 돌아왔다!',      emoji: '📚', piece: '조각 4', pieceEmoji: '🏆', pieceLabel: '완성!',  stampImg: '/assets/puzzle/stamp4.png' },
+  { id: 1, name: '창의융합실',    hint: '쏘놀 동아리실!', emoji: '👾', piece: '조각 1', pieceEmoji: '🏎️', pieceLabel: '미래의 F1 드라이버',   stampImg: '/assets/puzzle/stamp1.png' },
+  { id: 2, name: '중앙현관',     hint: '책상에 올라와 있어요',      emoji: '🚪', piece: '조각 2', pieceEmoji: '🥤', pieceLabel: '눈썰미 좋으신데요?', stampImg: '/assets/puzzle/stamp2.png' },
+  { id: 3, name: '가사실',      hint: '안 쪽까지 들어가 봐요',         emoji: '🍳', piece: '조각 3', pieceEmoji: '📚', pieceLabel: '책 많이 읽으면 봐준대요', stampImg: '/assets/puzzle/stamp3.png' },
+  { id: 4, name: '도서관',      hint: '드디어 집으로 돌아왔다!',      emoji: '📚', piece: '조각 4', pieceEmoji: '🧩', pieceLabel: '고생하셨어요!',  stampImg: '/assets/puzzle/stamp4.png' },
 ];
 
 // ── 미니게임 링크 매핑 ────────────────────────────
