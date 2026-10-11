@@ -139,8 +139,8 @@ body::before {
 <script>
 
 const CHARACTERS = {
-  cheongfoot: { label: '청풋', img: 'char1', imgRatio: 318 / 360 }, // headband+tie character
-  cheongmu:   { label: '청무', img: 'char2', imgRatio: 360 / 331 }  // waving character
+  cheongfoot: { label: '청풋', img: 'char2', imgRatio: 360 / 331 }, 
+  cheongmu:   { label: '청무', img: 'char1', imgRatio: 313 / 360 }  
 };
 
 const ASSET_SRCS = {
@@ -162,9 +162,9 @@ function preloadImages(srcs, done) {
 }
 
 const STAGES = [
-  { cupCount: 3, character: 'cheongfoot', swapCountRange: [4, 6],  swapDurationRange: [550, 750] }, // 하
-  { cupCount: 3, character: 'cheongmu',   swapCountRange: [6, 8],  swapDurationRange: [420, 560] }, // 중
-  { cupCount: 5, character: 'cheongfoot', swapCountRange: [9, 13], swapDurationRange: [300, 420] }  // 중~상
+  { cupCount: 3, character: 'cheongfoot', swapCountRange: [4, 6],  swapDurationRange: [550, 750] }, 
+  { cupCount: 3, character: 'cheongmu',   swapCountRange: [6, 8],  swapDurationRange: [420, 560] }, 
+  { cupCount: 5, character: 'cheongfoot', swapCountRange: [9, 13], swapDurationRange: [300, 420] }  
 ];
 
 const canvas = document.getElementById('game-canvas');
@@ -174,7 +174,7 @@ const stageLabelEl = document.getElementById('stage-label');
 const tapHintEl = document.getElementById('tap-hint');
 
 let stageIndex = 0;
-let cups = [];          // { slot, x, targetX, correct, lifted, liftAmount }
+let cups = [];
 let canvasW = 800, canvasH = 400;
 let inputEnabled = false;
 
@@ -224,7 +224,7 @@ function setupStage() {
 function drawCharacter(x, y, characterKey, scale = 1) {
   const c = CHARACTERS[characterKey];
   const img = assetImages[c.img];
-  const h = 64 * scale;              // target drawn height
+  const h = 64 * scale;
   const w = h * c.imgRatio;
   ctx.save();
   ctx.translate(x, y);
