@@ -86,7 +86,6 @@ html, body { height:100%; overflow:hidden; background:#000; font-family:'Noto Sa
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js" crossorigin="anonymous"></script>
 <script>
 /**
  * -----------------------------------------------------------------------
@@ -160,25 +159,76 @@ function navigateTo(route) {
 
 function tick() {
   if (!scanning) return;
-  if (video.readyState === video.HAVE_ENOUGH_DATA) {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
-    if (code && code.data) {
-      const dest = resolveDestination(code.data);
-      if (dest) { navigateTo(dest); return; }
-      else { showError(code.data); return; }
+  try {
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+      if (code && code.data) {
+        const dest = resolveDestination(code.data);
+        if (dest) { navigateTo(dest); return; }
+        else { showError(code.data); return; }
+      }
     }
+  } catch (err) {
+    // jsQR 라이브러리가 아예 안 불려와졌거나(네트워크 차단 등) 다른 런타임
+    // 에러가 났을 때 — 조용히 멈추는 대신 화면에 바로 보여줌.
+    scanning = false;
+    statusBar.textContent = '인식 오류: ' + (err && err.message ? err.message : err);
+    console.error('[QR scan error]', err);
+    return;
   }
   rafId = requestAnimationFrame(tick);
 }
 
+// jsQR 라이브러리를 여러 CDN에서 순서대로 시도해서 로드.
+// 하나가 막혀도(학교/회사 네트워크, 광고차단 등) 다음 걸로 자동 재시도함.
+const JSQR_SOURCES = [
+  'https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js',
+  'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js',
+  'https://unpkg.com/jsqr@1.4.0/dist/jsQR.js'
+];
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.crossOrigin = 'anonymous';
+    s.onload = () => resolve(src);
+    s.onerror = () => reject(new Error('load failed: ' + src));
+    document.head.appendChild(s);
+  });
+}
+
+async function loadJsQR() {
+  for (const src of JSQR_SOURCES) {
+    try {
+      await loadScript(src);
+      if (typeof jsQR === 'function') return true;
+    } catch (e) {
+      console.warn('[QR scan] jsQR load failed from', src, e);
+    }
+  }
+  return false;
+}
+
 async function startCamera() {
+  statusBar.textContent = 'QR 인식 기능을 불러오고 있어요...';
+  const ok = await loadJsQR();
+  if (!ok) {
+    statusBar.textContent = 'QR 인식 기능을 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침 해주세요.';
+    return;
+  }
+
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment' }
+      video: {
+        facingMode: 'environment',
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      }
     });
     video.srcObject = stream;
     await video.play();
