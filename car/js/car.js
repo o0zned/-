@@ -6,8 +6,41 @@ wheelImg.src = '/assets/car/wheel.png';
 const bodyImg = new Image();
 let bodyImgReady = false;
 let bodyImgAspect = 1;
+let bodySrc = bodyImg;
 bodyImg.onload = () => {
+    bodySrc = bodyImg;
     bodyImgAspect = bodyImg.naturalHeight / bodyImg.naturalWidth;
+    try {
+        const nw = bodyImg.naturalWidth, nh = bodyImg.naturalHeight;
+        const k = Math.min(1, 1024 / Math.max(nw, nh));
+        const sw = Math.max(1, Math.round(nw * k)), sh = Math.max(1, Math.round(nh * k));
+        const scratch = document.createElement('canvas');
+        scratch.width = sw; scratch.height = sh;
+        const sctx = scratch.getContext('2d');
+        sctx.drawImage(bodyImg, 0, 0, sw, sh);
+        const data = sctx.getImageData(0, 0, sw, sh).data;
+        let minX = sw, minY = sh, maxX = -1, maxY = -1;
+        for (let y = 0; y < sh; y++) {
+            for (let x = 0; x < sw; x++) {
+                if (data[(y * sw + x) * 4 + 3] > 8) {
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+        }
+        if (maxX >= minX && maxY >= minY) {
+            const cw = maxX - minX + 1, ch = maxY - minY + 1;
+            const crop = document.createElement('canvas');
+            crop.width = cw; crop.height = ch;
+            crop.getContext('2d').drawImage(scratch, minX, minY, cw, ch, 0, 0, cw, ch);
+            bodySrc = crop;
+            bodyImgAspect = ch / cw;
+        }
+    } catch (e) {
+        bodySrc = bodyImg;
+    }
     bodyImgReady = true;
 };
 bodyImg.onerror = () => { bodyImgReady = false; };
@@ -126,7 +159,7 @@ class Car {
         if (bodyImgReady && bodyImg.naturalWidth) {
 
             const drawH = w * bodyImgAspect;
-            ctx.drawImage(bodyImg, -w / 2, -drawH / 2, w, drawH);
+            ctx.drawImage(bodySrc, -w / 2, -drawH / 2, w, drawH);
         } else {
 
             if (typeof ctx.roundRect !== 'function') {
