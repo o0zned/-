@@ -187,7 +187,7 @@
     border: 2px solid rgba(195,255,116,0.5);
     box-shadow: var(--shadow-md);
   }
-  /* 4조각 2x2 균등 배치 (예전 5조각용 1+2+2 비대칭 배치에서 변경) */
+
   .puzzle-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -219,9 +219,6 @@
   }
   .piece-emoji { font-size: clamp(20px, 5vw, 36px); }
 
-  /* Filled piece: the stamp fills the whole square cell edge-to-edge as
-     a circle (inscribed in the square, corners of the gradient bg peek
-     through), instead of a small centered badge. */
   .piece-stamp {
     position: absolute;
     inset: 0;
@@ -534,6 +531,15 @@
     text-decoration: none;
   }
   .reset-link:active { opacity: 0.8; }
+
+  .code-again { margin-top: 12px; text-align: center; }
+  .code-again[hidden] { display: none; }
+  .code-again-btn {
+    background: var(--green-deep); color: var(--green); border: none;
+    border-radius: var(--radius-md); padding: 12px 20px;
+    font-size: 14px; font-weight: 700; font-family: inherit; cursor: pointer;
+  }
+  .code-again-btn:active { transform: scale(0.97); }
 
   .bottom-pad { height: 48px; }
 

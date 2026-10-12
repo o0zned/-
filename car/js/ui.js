@@ -1,13 +1,3 @@
-/**
- * ui.js
- * -----------------------------------------------------------------------
- * Phase 1 UI: just the header + a small dev panel for regenerating
- * terrain with a new/specific seed, so you can eyeball a bunch of
- * generated terrains on your phone before physics ever touches it.
- * Touch controls (accelerate/brake) get added here in Phase 7.
- * -----------------------------------------------------------------------
- */
-
 const UI = {
     seedInput: null,
     seedLabel: null,

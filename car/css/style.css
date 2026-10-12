@@ -1,8 +1,3 @@
-/* ==========================================================================
-   Design tokens — carried over from the main site (hrsxnlxbook) so the
-   game reads as the same product. Values are copied 1:1 from the site's
-   :root, then a couple of game-specific roles are added below.
-   ========================================================================== */
 :root {
     --green: #BFF366;
     --green-dark: #8BCC2A;
@@ -30,9 +25,7 @@
 * {
     margin: 0; padding: 0; box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
-    /* Holding down accelerate/brake is a long-press — without this,
-       mobile browsers interpret that as "select text" and pop up a
-       Copy/선택 callout right on top of the game. This kills that. */
+
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
@@ -40,23 +33,17 @@
 
 html, body {
     height: 100%;
-    overflow: hidden;               /* no page scroll — this is a game viewport */
+    overflow: hidden;
     overscroll-behavior: none;
     background: var(--cream);
     font-family: 'Noto Sans KR', sans-serif;
     position: relative;
 }
 
-/* ==========================================================================
-   Landscape, full-bleed game viewport. This is a side-scrolling driving
-   game, so — like the reference screenshot — the canvas fills the whole
-   screen and the HUD floats on top of it, rather than living in a
-   separate header block that eats vertical space.
-   ========================================================================== */
 .canvas-wrap {
     position: absolute;
     inset: 0;
-    touch-action: none; /* we handle drag ourselves; stop the page panning/zooming */
+    touch-action: none;
 }
 #game-canvas {
     display: block;
@@ -64,7 +51,6 @@ html, body {
     height: 100%;
 }
 
-/* ---- HUD bar overlaid on the canvas (score/logo row + button) --------- */
 .hud-top {
     position: absolute;
     top: 0; left: 0; right: 0;
@@ -73,12 +59,9 @@ html, body {
     justify-content: space-between;
     padding: max(10px, env(safe-area-inset-top)) 14px 10px;
     background: linear-gradient(180deg, rgba(250,255,240,0.9) 0%, rgba(250,255,240,0) 100%);
-    pointer-events: none; /* whole bar (and its wrapper divs) pass touches through */
+    pointer-events: none;
 }
-/* Only the actual buttons should intercept touches — NOT .hud-left/
-   .hud-right wrapper divs and NOT the logo-badge, otherwise their whole
-   bounding box (which sits over the left/right drive zones) would
-   silently eat brake/accelerate taps. */
+
 .hud-icon-btn { pointer-events: auto; }
 .hud-left {
     display: flex;
@@ -143,10 +126,6 @@ html, body {
     box-shadow: 0 0 0 2px var(--green);
 }
 
-/* ---- Dev / testing panel — floats top-center, well clear of the
-   left/right drive zones (it used to sit bottom-left, which is INSIDE
-   the brake zone's full-height hit area and was stealing those touches
-   before they ever reached the canvas). ---- */
 .dev-panel {
     position: absolute;
     top: max(44px, calc(env(safe-area-inset-top) + 34px));
@@ -156,10 +135,10 @@ html, body {
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
     padding: 8px 10px;
-    display: none; /* only shown together with debug mode, see below */
+    display: none;
     align-items: center;
     gap: 6px;
-    pointer-events: none; /* only the real controls below re-enable this */
+    pointer-events: none;
 }
 body.debug-active .dev-panel {
     display: flex;
@@ -196,15 +175,6 @@ body.debug-active .dev-panel {
 }
 .dev-btn:active { transform: scale(0.93); }
 
-/* Debug mode's info panel sits bottom-left too, so hide the seed panel
-   while it's showing rather than let them overlap. */
-/* (Seed panel visibility is now controlled entirely by the .dev-panel
-   rule above — it shows WITH debug mode instead of being hidden by it.) */
-
-/* ---- Left/right tap-zone hints ----------------------------------------
-   Purely informational labels showing where to hold for brake/accelerate.
-   pointer-events:none so touches pass straight through to the canvas
-   underneath, which is what actually reads the input. */
 .control-hint {
     position: absolute;
     bottom: max(14px, env(safe-area-inset-bottom));
@@ -228,10 +198,6 @@ body.debug-active .dev-panel {
 }
 body.debug-active .control-hint { display: none; }
 
-/* ==========================================================================
-   Rotate-device prompt — this game is designed for landscape only. Hidden
-   by default; shown (and the game hidden) while the phone is portrait.
-   ========================================================================== */
 .rotate-prompt {
     display: none;
     position: fixed;
@@ -264,11 +230,6 @@ body.debug-active .control-hint { display: none; }
     .canvas-wrap { display: none; }
 }
 
-/* ==========================================================================
-   Game-over overlay — same visual language as the reference site's
-   completion screen (rounded white card, green accent bar, Gaegu title,
-   springy scale-in), adapted for run results instead of puzzle completion.
-   ========================================================================== */
 .gameover-overlay {
     position: fixed;
     inset: 0;

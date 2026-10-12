@@ -101,13 +101,13 @@ const progressEl = document.getElementById('progress-count');
 const GOAL = 30;
 const CONFIG = {
   playerRadius: 22,
-  playerX: 90,               // fixed x position near the left edge
+  playerX: 90,
   bookWidth: 36,
-  bookHeight: 52, // matches the real book.png aspect ratio (≈0.69 w/h)
-  // 난이도를 한 단계 더 올림 — 개수도 늘었으니 속도/간격 다시 조여줌
-  bookSpeedRange: [300, 410],   // px/sec, right-to-left (was 260-360)
-  spawnIntervalRange: [420, 700], // ms between spawns (was 500-800)
-  hitboxShrink: 0.85            // was 0.78 — hit detection slightly less forgiving
+  bookHeight: 52,
+
+  bookSpeedRange: [300, 410],
+  spawnIntervalRange: [420, 700],
+  hitboxShrink: 0.85
 };
 
 let viewW = 0, viewH = 0;
@@ -138,7 +138,6 @@ window.addEventListener('orientationchange', resizeCanvas);
 function rand(min, max) { return min + Math.random() * (max - min); }
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
-// ---- Touch/mouse: player Y follows the finger directly ----
 function setPlayerTargetFromClientY(clientY) {
   const rect = canvas.getBoundingClientRect();
   player.targetY = clamp(clientY - rect.top, CONFIG.playerRadius + 10, viewH - CONFIG.playerRadius - 10);
@@ -164,18 +163,18 @@ function spawnBook() {
 const playerImg = new Image();
 let playerImgReady = false;
 playerImg.onload = () => { playerImgReady = true; };
-playerImg.src = '/assets/yabawi/char1.png';   // 야바위에서 쓰는 사람모양 친구 그림 재사용
+playerImg.src = '/assets/yabawi/char1.png';
 
 function drawPlayer() {
   ctx.save();
   ctx.translate(CONFIG.playerX, player.y);
   if (playerImgReady && playerImg.naturalWidth) {
-    // 그림 비율(약 0.88 w/h) 유지. 충돌 판정(원)은 몸통 쪽에 그대로 두고 그림만 조금 더 크게.
+
     const h = CONFIG.playerRadius * 3;
     const w = h * (playerImg.naturalWidth / playerImg.naturalHeight);
     ctx.drawImage(playerImg, -w / 2, -h / 2, w, h);
   } else {
-    // 그림 로딩 전 임시 모양
+
     ctx.fillStyle = '#8BCC2A';
     ctx.beginPath();
     ctx.arc(0, 0, CONFIG.playerRadius, 0, Math.PI * 2);
@@ -204,7 +203,7 @@ function drawBook(book) {
   if (bookImgReady && bookImg.naturalWidth) {
     ctx.drawImage(bookImg, -w/2, -h/2, w, h);
   } else {
-    // Fallback while the image is still loading.
+
     ctx.fillStyle = '#B4552D';
     ctx.fillRect(-w/2, -h/2, w, h);
     ctx.fillStyle = '#F4E9D8';
@@ -236,6 +235,7 @@ function checkCollision(book) {
 }
 
 function endGame(success) {
+  if (gameOver) return;
   gameOver = true;
   running = false;
   const overlay = document.getElementById('result-overlay');
@@ -251,7 +251,7 @@ function endGame(success) {
     title.textContent = '맞았어요!';
     sub.textContent = dodged + '개까지 피했어요. 다시 도전해보세요!';
   }
-  // Success collects this game's puzzle piece on the main site.
+
   document.getElementById('home-link').href = success ? '/?piece=3' : '/';
   if (typeof SiteProgress !== 'undefined') {
     SiteProgress.recordRun('dodgeBooks', { completed: success, bestDodged: dodged });
@@ -277,7 +277,7 @@ function update(dt, timestampMs) {
       book.passed = true;
       dodged++;
       progressEl.textContent = dodged;
-      if (dodged >= GOAL) { endGame(true); }
+      if (dodged >= GOAL) { endGame(true); return; }
     }
 
     if (checkCollision(book)) {
@@ -316,7 +316,8 @@ function startGame() {
   nextSpawnAt = 0;
   document.getElementById('title-overlay').classList.remove('show');
   document.getElementById('result-overlay').classList.remove('show');
-  requestAnimationFrame(loop);
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(loop);
 }
 
 document.getElementById('start-btn').addEventListener('click', startGame);

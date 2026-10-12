@@ -1,18 +1,3 @@
-/**
- * input.js
- * -----------------------------------------------------------------------
- * Touch controls, but as SCREEN ZONES instead of discrete buttons:
- *   - left half of the canvas held down  -> brake
- *   - right half of the canvas held down -> accelerate
- *
- * Multi-touch aware: each active touch point is checked independently
- * against the midline, so e.g. resting a thumb on the right side while
- * briefly tapping the left still registers both correctly. Holding
- * continues to apply force every frame for as long as the zone is held
- * (per spec — no "tap = instant velocity change").
- * -----------------------------------------------------------------------
- */
-
 const Input = {
     accelerate: false,
     brake: false,
@@ -38,7 +23,6 @@ const Input = {
         canvas.addEventListener('touchend', (e) => evaluateTouches(e.touches), { passive: true });
         canvas.addEventListener('touchcancel', (e) => evaluateTouches(e.touches), { passive: true });
 
-        // Mouse fallback for desktop testing while developing.
         let mouseDown = false;
         canvas.addEventListener('mousedown', (e) => {
             mouseDown = true;

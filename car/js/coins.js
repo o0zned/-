@@ -1,13 +1,3 @@
-/**
- * coins.js
- * -----------------------------------------------------------------------
- * Generates collectible coins along the terrain, floating just above the
- * surface at a height a driving car actually passes through. Skips
- * placement on steep slopes so every coin is realistically visible and
- * reachable, per spec. Tracks collection and exposes score/count.
- * -----------------------------------------------------------------------
- */
-
 const coinImg = new Image();
 let coinImgReady = false;
 coinImg.onload = () => { coinImgReady = true; };
@@ -21,11 +11,11 @@ class Coins {
     }
 
     _generate(terrain, seed) {
-        const rng = createRNG(seed + 999); // offset so coin layout isn't identical to terrain's own RNG stream
+        const rng = createRNG(seed + 999);
         const cfg = COIN_CONFIG;
         const coins = [];
 
-        let x = 300; // skip the very start, where the car spawns
+        let x = 300;
         while (x < TERRAIN_CONFIG.worldWidth - 200) {
             const slope = terrain.getSlopeAt(x);
             if (Math.abs(slope) <= cfg.maxSlopeForPlacement) {
@@ -41,9 +31,6 @@ class Coins {
         return coins;
     }
 
-    /** Checks the car's chassis + both wheels against every uncollected
-     * coin in view and collects any within pickup range. Returns the
-     * number newly collected this call (for triggering feedback). */
     checkCollisions(car) {
         const cfg = COIN_CONFIG;
         const carPoints = [car.chassis.position, car.frontWheel.position, car.rearWheel.position];
@@ -68,12 +55,12 @@ class Coins {
 
     render(ctx, cameraX, viewW, timeMs) {
         const cfg = COIN_CONFIG;
-        const bob = Math.sin(timeMs / 300) * 3; // gentle floating bob, purely decorative
+        const bob = Math.sin(timeMs / 300) * 3;
 
         for (const coin of this.list) {
             if (coin.collected) continue;
             const screenX = coin.x - cameraX;
-            if (screenX < -30 || screenX > viewW + 30) continue; // offscreen, skip drawing
+            if (screenX < -30 || screenX > viewW + 30) continue;
 
             ctx.save();
             ctx.translate(screenX, coin.y + bob);
@@ -81,7 +68,7 @@ class Coins {
                 const d = cfg.radius * 2;
                 ctx.drawImage(coinImg, -d / 2, -d / 2, d, d);
             } else {
-                // Fallback while the image is still loading.
+
                 ctx.fillStyle = '#F4C542';
                 ctx.strokeStyle = '#B8860B';
                 ctx.lineWidth = 2;

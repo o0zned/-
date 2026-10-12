@@ -53,7 +53,6 @@ body { background: linear-gradient(180deg, #C8FF6E 0%, #F3FFD9 100%); }
 }
 .find-item.found { opacity:1; filter:none; background:var(--green); transform:scale(1.1); }
 
-/* ---- 그림 뷰어 (핀치 확대 / 드래그 이동) ---- */
 .viewport {
     position:absolute; top:var(--hud-h); left:0; right:0; bottom:0; z-index:1;
     overflow:hidden; touch-action:none; background:#16301f;
@@ -147,10 +146,7 @@ body { background: linear-gradient(180deg, #C8FF6E 0%, #F3FFD9 100%); }
 
 <script src="/progress.js"></script>
 <script>
-/**
- * 숨은 물건 위치는 원본 그림(1254 x 1254) 기준 픽셀 좌표.
- * 그림을 바꾸면 이 좌표(x, y)와 반경(r)만 새로 맞춰주면 됨.
- */
+
 const IMG_SIZE = 1254;
 const HIDDEN_OBJECTS = [
   { id: 'ladybug', emoji: '🐞', label: '무당벌레', x: 305,  y: 48,  r: 70 },
@@ -173,7 +169,6 @@ let found = new Set();
 let startTime = null;
 let gameActive = false;
 
-// 뷰어 상태: S = 그림 한 변의 화면 크기(확대 1배일 때), z = 확대 배율, tx/ty = 이동량
 let S = 300, z = 1, tx = 0, ty = 0;
 
 function clampPan() {
@@ -189,9 +184,9 @@ function applyTransform() {
 let lastLandscape = null;
 function layout() {
   const vw = viewport.clientWidth, vh = viewport.clientHeight;
-  if (!vw || !vh) return;           // 세로 화면(안내문 표시 중)이면 계산 안 함
+  if (!vw || !vh) return;
   S = Math.min(vw, vh);
-  minZoom = 1;                      // 처음엔 그림 전체가 한 화면에 다 보임 (확대하면 더 크게 볼 수 있음)
+  minZoom = 1;
   maxZoom = 6;
   stage.style.width = S + 'px';
   stage.style.height = S + 'px';
@@ -214,7 +209,6 @@ function zoomAt(cx, cy, factor) {
 window.addEventListener('resize', layout);
 window.addEventListener('orientationchange', () => setTimeout(layout, 200));
 
-// ---- HUD ------------------------------------------------------------------
 function renderFindList() {
   findListEl.innerHTML = '';
   for (const o of HIDDEN_OBJECTS) {
@@ -230,7 +224,6 @@ function renderFindList() {
   el.innerHTML = HIDDEN_OBJECTS.map(o => `<span class="target-chip">${o.emoji} ${o.label}</span>`).join('');
 })();
 
-// ---- 찾았을 때 표시 ---------------------------------------------------------
 function addRing(o) {
   const ring = document.createElement('div');
   ring.className = 'found-ring';
@@ -260,10 +253,9 @@ function spawnFoundFeedback(x, y, label) {
   }, 800);
 }
 
-// ---- 탭 판정 ---------------------------------------------------------------
 function handleTap(clientX, clientY) {
   if (!gameActive) return;
-  const rect = stage.getBoundingClientRect(); // 확대/이동이 반영된 실제 화면 위치
+  const rect = stage.getBoundingClientRect();
   const ix = (clientX - rect.left) / rect.width * IMG_SIZE;
   const iy = (clientY - rect.top) / rect.height * IMG_SIZE;
   for (const o of HIDDEN_OBJECTS) {
@@ -279,12 +271,11 @@ function handleTap(clientX, clientY) {
   }
 }
 
-// ---- 터치 / 마우스 제스처 (이동, 핀치 확대) ------------------------------------
 const pointers = new Map();
 let moved = false, pinched = false, startX = 0, startY = 0;
 
 viewport.addEventListener('pointerdown', (e) => {
-  viewport.setPointerCapture(e.pointerId);
+  try { viewport.setPointerCapture(e.pointerId); } catch (err) {}
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (pointers.size === 1) { moved = false; pinched = false; startX = e.clientX; startY = e.clientY; }
   else pinched = true;
@@ -319,7 +310,6 @@ function endPointer(e) {
 viewport.addEventListener('pointerup', endPointer);
 viewport.addEventListener('pointercancel', endPointer);
 
-// 컴퓨터에서는 마우스 휠로 확대
 viewport.addEventListener('wheel', (e) => {
   e.preventDefault();
   const vr = viewport.getBoundingClientRect();
@@ -327,7 +317,6 @@ viewport.addEventListener('wheel', (e) => {
   applyTransform();
 }, { passive: false });
 
-// ---- 게임 흐름 ---------------------------------------------------------------
 function startGame() {
   found = new Set();
   stage.querySelectorAll('.found-ring').forEach(r => r.remove());
@@ -349,7 +338,7 @@ function endGame() {
   if (typeof SiteProgress !== 'undefined') {
     SiteProgress.recordRun('hiddenPicture', { completed: true, lastTimeMs: elapsedSec * 1000 });
   }
-  // 클리어하면 메인 사이트에서 이 게임의 퍼즐 조각이 수집됨.
+
   document.getElementById('home-link').href = '/?piece=4';
 
   document.getElementById('result-overlay').classList.add('show');
@@ -357,6 +346,11 @@ function endGame() {
 
 document.getElementById('start-btn').addEventListener('click', startGame);
 document.getElementById('result-btn').addEventListener('click', startGame);
+
+document.getElementById('scene').addEventListener('error', () => {
+  viewport.insertAdjacentHTML('beforeend',
+    '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;text-align:center;padding:24px">그림을 불러오지 못했어요.<br>새로고침 해주세요.</div>');
+});
 
 renderFindList();
 layout();

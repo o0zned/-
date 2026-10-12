@@ -139,8 +139,8 @@ body::before {
 <script>
 
 const CHARACTERS = {
-  cheongfoot: { label: '청풋', img: 'char2', imgRatio: 360 / 331 }, 
-  cheongmu:   { label: '청무', img: 'char1', imgRatio: 313 / 360 }  
+  cheongfoot: { label: '청풋', img: 'char2', imgRatio: 360 / 331 },
+  cheongmu:   { label: '청무', img: 'char1', imgRatio: 313 / 360 }
 };
 
 const ASSET_SRCS = {
@@ -162,9 +162,9 @@ function preloadImages(srcs, done) {
 }
 
 const STAGES = [
-  { cupCount: 3, character: 'cheongfoot', swapCountRange: [4, 6],  swapDurationRange: [550, 750] }, 
-  { cupCount: 3, character: 'cheongmu',   swapCountRange: [6, 8],  swapDurationRange: [420, 560] }, 
-  { cupCount: 5, character: 'cheongfoot', swapCountRange: [9, 13], swapDurationRange: [300, 420] }  
+  { cupCount: 3, character: 'cheongfoot', swapCountRange: [4, 6],  swapDurationRange: [550, 750] },
+  { cupCount: 3, character: 'cheongmu',   swapCountRange: [6, 8],  swapDurationRange: [420, 560] },
+  { cupCount: 5, character: 'cheongfoot', swapCountRange: [9, 13], swapDurationRange: [300, 420] }
 ];
 
 const canvas = document.getElementById('game-canvas');
@@ -243,13 +243,13 @@ function drawCharacter(x, y, characterKey, scale = 1) {
   ctx.restore();
 }
 
-const CUP_IMG_RATIO = 349 / 360; 
+const CUP_IMG_RATIO = 349 / 360;
 
 function drawCup(cup) {
   const baseY = canvasH * 0.62;
-  const liftY = cup.lifted * 46; 
+  const liftY = cup.lifted * 46;
   const bottomY = baseY - liftY;
-  const cupH = 92;                       
+  const cupH = 92;
   const cupW = cupH * CUP_IMG_RATIO;
   const img = assetImages.cup;
 
@@ -287,7 +287,6 @@ function loop() {
   render();
   requestAnimationFrame(loop);
 }
-
 
 function startStage() {
   setupStage();
@@ -371,7 +370,7 @@ function showResult(success) {
   const title = document.getElementById('result-title');
   const sub = document.getElementById('result-sub');
   const btn = document.getElementById('result-btn');
-  document.getElementById('home-link').href = '/'; // reset; only the final-clear branch below overrides this
+  document.getElementById('home-link').href = '/';
 
   if (success && stageIndex < STAGES.length - 1) {
     emoji.textContent = '🎉';
@@ -388,7 +387,7 @@ function showResult(success) {
     sub.textContent = '3스테이지를 모두 성공했어요!';
     btn.textContent = '처음부터 다시';
     btn.onclick = () => { overlay.classList.remove('show'); stageIndex = 0; startStage(); };
-    // Final-stage clear collects this game's puzzle piece on the main site.
+
     document.getElementById('home-link').href = '/?piece=2';
     if (typeof SiteProgress !== 'undefined') {
       SiteProgress.recordRun('yabawi', { completed: true, bestStageReached: STAGES.length });
