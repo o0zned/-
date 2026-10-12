@@ -54,8 +54,8 @@ const PHYSICS_CONFIG = {
 
 const CAR_CONFIG = {
 
-    visualBodyScale: 1.35,
-    visualWheelScale: 0.8,
+    visualBodyScale: 1.5,
+    visualWheelScale: 0.4,
     visualBodyOffsetY: -3,
 
     bodyWidth: 86,
