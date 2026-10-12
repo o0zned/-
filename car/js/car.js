@@ -166,11 +166,14 @@ class Car {
     _renderChassis(ctx, cameraX) {
         const cfg = CAR_CONFIG;
         const p = this.chassis.position;
-        const w = cfg.bodyWidth, h = cfg.bodyHeight;
+        // 보이는 크기만 배율 적용 (충돌 상자 cfg.bodyWidth x bodyHeight는 그대로)
+        const k = cfg.visualBodyScale || 1;
+        const w = cfg.bodyWidth * k, h = cfg.bodyHeight * k;
 
         ctx.save();
         ctx.translate(p.x - cameraX, p.y);
         ctx.rotate(this.chassis.angle);
+        ctx.translate(0, cfg.visualBodyOffsetY || 0);
 
         if (bodyImgReady && bodyImg.naturalWidth) {
             // 실제 차체 아트 — 가로폭은 물리 박스(w)에 맞추고, 높이는 원본
@@ -205,9 +208,14 @@ class Car {
     _renderWheel(ctx, wheel, cameraX) {
         const p = wheel.position;
         ctx.save();
-        ctx.translate(p.x - cameraX, p.y);
+        // 보이는 바퀴만 작게 그리되, 바닥에 닿는 높이는 실제 충돌 바퀴와 맞춤.
+        // (아래로 내리는 이동은 회전보다 '먼저' 해야 함 — 회전 뒤에 하면 바퀴가
+        // 구를 때 중심이 빙글빙글 돌아서 출렁거려 보임)
+        const vk = CAR_CONFIG.visualWheelScale || 1;
+        const vr = CAR_CONFIG.wheelRadius * vk;
+        const d = vr * 2;
+        ctx.translate(p.x - cameraX, p.y + (CAR_CONFIG.wheelRadius - vr));
         ctx.rotate(wheel.angle);
-        const d = CAR_CONFIG.wheelRadius * 2;
         if (wheelImgReady && wheelImg.naturalWidth) {
             // Real tire art — its own tread pattern reads the spin, so no
             // extra spoke line is drawn on top.
@@ -216,13 +224,13 @@ class Car {
             // Fallback while the image is still loading.
             ctx.fillStyle = '#4A3728'; // --brown
             ctx.beginPath();
-            ctx.arc(0, 0, CAR_CONFIG.wheelRadius, 0, Math.PI * 2);
+            ctx.arc(0, 0, vr, 0, Math.PI * 2);
             ctx.fill();
             ctx.strokeStyle = '#BFF366'; // --green
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(0, 0);
-            ctx.lineTo(CAR_CONFIG.wheelRadius, 0);
+            ctx.lineTo(vr, 0);
             ctx.stroke();
         }
         ctx.restore();

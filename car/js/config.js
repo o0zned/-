@@ -141,10 +141,19 @@ const PHYSICS_CONFIG = {
 // defined now for centralization per spec, but stay INERT until Phase 4
 // actually applies them as forces) ----------------------------------------
 const CAR_CONFIG = {
+    // --- 보이는 모양만 따로 조절 (물리/충돌에는 영향 없음) ---
+    // 위의 bodyWidth/wheelRadius 같은 숫자는 '충돌 판정 + 운전 느낌'을 정하는
+    // 값이라 바꾸면 차가 튀어 오르거나 뒤집히기 쉬움 (차체를 키웠더니 앞코가
+    // 땅에 박혀서 날아갔음). 그래서 느낌은 원래 값으로 두고, 눈에 보이는
+    // 크기만 아래 배율로 키우고/줄임.
+    visualBodyScale: 1.35,    // 차체 그림 크기 배율 (1 = 충돌 상자와 같은 크기)
+    visualWheelScale: 0.8,    // 바퀴 그림 크기 배율 (바닥에 닿는 높이는 그대로 맞춰줌)
+    visualBodyOffsetY: -3,    // 차체 그림을 위로 살짝 올림 (px)
+
     // --- Chassis (car body) ---
     // Physical size of the rectangular chassis, in px.
-    bodyWidth: 132,
-    bodyHeight: 42,
+    bodyWidth: 86,
+    bodyHeight: 28,
 
     // mass: how much "stuff" the chassis has. Heavier = harder to
     // accelerate/decelerate (more inertia), and it presses into the
@@ -173,7 +182,7 @@ const CAR_CONFIG = {
     centerOfMassOffset: { x: 0, y: -8 },
 
     // --- Wheels ---
-    wheelRadius: 12,
+    wheelRadius: 15,
     wheelMass: 1,
 
     // Coulomb friction: how much a wheel resists SLIDING once it's
@@ -188,12 +197,12 @@ const CAR_CONFIG = {
     wheelFrictionStatic: 1.0,
 
     // How far forward/back each wheel sits from the chassis center, px.
-    frontWheelOffsetX: 46,
-    rearWheelOffsetX: -46,
+    frontWheelOffsetX: 30,
+    rearWheelOffsetX: -30,
 
     // How far below the chassis center each wheel sits, px (positive =
     // down, since canvas y grows downward).
-    wheelOffsetY: 22,
+    wheelOffsetY: 16,
 
     // --- Wheel-to-chassis connection (acts like a simple suspension) ---
     // stiffness: 1.0 = rigid rod (no give at all). Lower values behave
