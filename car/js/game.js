@@ -251,7 +251,12 @@
         overlayEl.classList.remove('show');
     }
     document.getElementById('restart-btn').addEventListener('click', () => {
+        currentSeed = Math.floor(Math.random() * 1000000) + 1;
+        terrain.regenerate(currentSeed);
+        Physics.buildTerrainCollision(terrain);
         spawnCar(currentSeed);
+        UI.setSeedLabel(currentSeed);
+        document.getElementById('seed-input').value = currentSeed;
     });
 
     let lastTimestamp = null;
