@@ -143,8 +143,8 @@ const PHYSICS_CONFIG = {
 const CAR_CONFIG = {
     // --- Chassis (car body) ---
     // Physical size of the rectangular chassis, in px.
-    bodyWidth: 86,
-    bodyHeight: 28,
+    bodyWidth: 132,
+    bodyHeight: 42,
 
     // mass: how much "stuff" the chassis has. Heavier = harder to
     // accelerate/decelerate (more inertia), and it presses into the
@@ -173,7 +173,7 @@ const CAR_CONFIG = {
     centerOfMassOffset: { x: 0, y: -8 },
 
     // --- Wheels ---
-    wheelRadius: 15,
+    wheelRadius: 12,
     wheelMass: 1,
 
     // Coulomb friction: how much a wheel resists SLIDING once it's
@@ -188,12 +188,12 @@ const CAR_CONFIG = {
     wheelFrictionStatic: 1.0,
 
     // How far forward/back each wheel sits from the chassis center, px.
-    frontWheelOffsetX: 30,
-    rearWheelOffsetX: -30,
+    frontWheelOffsetX: 46,
+    rearWheelOffsetX: -46,
 
     // How far below the chassis center each wheel sits, px (positive =
     // down, since canvas y grows downward).
-    wheelOffsetY: 16,
+    wheelOffsetY: 22,
 
     // --- Wheel-to-chassis connection (acts like a simple suspension) ---
     // stiffness: 1.0 = rigid rod (no give at all). Lower values behave
