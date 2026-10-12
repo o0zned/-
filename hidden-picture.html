@@ -117,7 +117,7 @@ body { background: linear-gradient(180deg, #C8FF6E 0%, #F3FFD9 100%); }
     <img id="scene" src="/assets/hidden/scene.webp" alt="해변 그림" draggable="false">
   </div>
 </div>
-<div class="zoom-hint" id="zoom-hint">드래그로 이동 · 두 손가락으로 확대</div>
+<div class="zoom-hint" id="zoom-hint">두 손가락으로 확대 · 드래그로 이동</div>
 
 <div class="rotate-prompt">
   <div class="rotate-icon">🔄</div>
@@ -161,7 +161,7 @@ const HIDDEN_OBJECTS = [
   { id: 'key',     emoji: '🔑', label: '열쇠',     x: 1105, y: 745, r: 70 }
 ];
 
-let minZoom = 1;   // 가로 화면에서는 그림 가로폭이 화면에 꽉 차는 배율
+let minZoom = 1;
 let maxZoom = 6;
 
 const viewport = document.getElementById('viewport');
@@ -191,8 +191,8 @@ function layout() {
   const vw = viewport.clientWidth, vh = viewport.clientHeight;
   if (!vw || !vh) return;           // 세로 화면(안내문 표시 중)이면 계산 안 함
   S = Math.min(vw, vh);
-  minZoom = Math.max(1, vw / S);    // 가로 화면: 폭에 꽉 차게 시작, 위아래로 드래그해서 봄
-  maxZoom = Math.max(6, minZoom * 3);
+  minZoom = 1;                      // 처음엔 그림 전체가 한 화면에 다 보임 (확대하면 더 크게 볼 수 있음)
+  maxZoom = 6;
   stage.style.width = S + 'px';
   stage.style.height = S + 'px';
   const landscape = vw >= vh;
